@@ -1092,7 +1092,7 @@ def guard_transition_replay_wrapper_lines(
 		if numeric_goal_conditions:
 			raise ValueError(
 				"uncertified_numeric_conjunctive_transition: full-test wrappers require "
-				"numeric effect-preservation certificates for mixed or multiple goals.",
+				"numeric effect-preservation witnesses for mixed or multiple goals.",
 			)
 		if domain_file is None or atomic_plan_library is None:
 			raise ValueError(

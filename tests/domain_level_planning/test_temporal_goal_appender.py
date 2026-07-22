@@ -291,9 +291,14 @@ def test_temporal_compiler_variants_share_inputs_and_isolate_mechanisms(
 	unprotected_repair = next(
 		plan for plan in unprotected.plans if plan.plan_name.endswith("_repair_1")
 	)
-	assert unprotected_repair.binding_certificate[0]["serialization_certificate"][
-		"certificate_kind"
-	] == "evaluation_only_canonical_unprotected_serialization"
+	unprotected_record = unprotected_repair.binding_certificate[0][
+		"serialization_certificate"
+	]
+	assert (
+		unprotected_record["record_kind"]
+		== "evaluation_only_canonical_unprotected_serialization"
+	)
+	assert "certificate_kind" not in unprotected_record
 
 	certified_flat = outputs[TemporalCompilerVariant.CERTIFIED_FLAT]
 	assert any(plan.plan_name.endswith("_repair_1") for plan in certified_flat.plans)

@@ -9,8 +9,9 @@ $\operatorname{Cert}_D(b)$ and records its completion summary $\Sigma_b$. It
 then checks candidate sets globally for evidence and schema coverage,
 internal-call closure, and compatible progress and dependency ranks before
 selecting $\mathcal M_D$. Query compilation reuses the selected summaries to
-certify an occurrence-specific preservation portfolio $\boldsymbol\Pi_\chi$ and
-serialization $\boldsymbol\ell_\chi$ for each DFA guard $\chi$; it neither
+construct a transition certificate recording an occurrence-specific preservation
+portfolio $\boldsymbol\Pi_\chi$ and serialization $\boldsymbol\ell_\chi$ for each
+DFA guard $\chi$; it neither
 reopens atomic selection nor relearns $\mathcal M_D$.
 
 These obligations are checked before rendering, which preserves each selected
@@ -182,8 +183,9 @@ trigger--context--body rules, rather than their AgentSpeak rendering, define
 $\mathcal M_D$; the claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
-Figure~\ref{fig:atomic-case} isolates one certified compositional derivation
-available in $\mathcal M_D$. Under the displayed binding, branch $b_0$ expands
+Figure~\ref{fig:atomic-case} isolates one compositional derivation through
+certified branches in $\mathcal M_D$. Under the displayed binding, branch $b_0$
+expands
 $\texttt{!on(y,z)}$ into $\texttt{!clear(y)}$ followed by a retry without
 changing the PDDL state; $b_1$ clears $y$, and $b_2$ establishes
 $\texttt{on(y,z)}$. Several selected branches may apply in one state, so the
@@ -199,8 +201,8 @@ Atomic-core execution placeholder\\[5pt]
 $\texttt{on(z,y),on(y,x)}$\\
 $\rightarrow\ !\texttt{clear(y)}\rightarrow\ !\texttt{on(y,z)}$}}
 }
-\caption{A certified derivation through a selected Blocks World atomic-core
-slice: internal subgoal expansion followed by schema-action execution.}
+\caption{A derivation through a certified Blocks World atomic-core slice:
+internal subgoal expansion followed by schema-action execution.}
 \label{fig:atomic-case}
 \end{figure}
 
@@ -318,8 +320,8 @@ branch-local, candidate-space, or supported-composition boundary.
 
 \paragraph{Atomic branch soundness.}
 \textbf{Proposition 1.} If an emitted $p(\bar X)$ branch's context holds under a
-type-consistent grounding and called modules satisfy their certified achievement
-and completion summaries, the branch
+type-consistent grounding and each called module satisfies the achievement
+contract and completion summary established by its certification, the branch
 is executable and returns with $p(\bar X)$. Binding grounds each term; induction
 over symbolic progression establishes preconditions and final achievement;
 recursion uses its ranking and preparation rechecks the producer context.

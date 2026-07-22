@@ -840,7 +840,7 @@ def _evidence_compiler_library_quality(
 		"plan_template_kind_counts": plan_template_kind_counts,
 		"plan_template_classification_basis": (
 			"per plan template: numeric resource goal modules are classified "
-			"by their numeric certificate, empty non-numeric bodies are "
+			"by their numeric target metadata, empty non-numeric bodies are "
 			"already-true, bodies with only primitive actions are action-only, "
 			"and bodies containing achievement subgoals are subgoal-decomposed"
 		),

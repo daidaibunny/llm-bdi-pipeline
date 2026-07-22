@@ -33,14 +33,15 @@ The paper has one thesis:
 > plan library, and supported achievement goals and temporal extensions can be
 > composed over
 > that library, provided that every accepted atomic branch and temporal
-> transition carries the required action-schema-derived certificates.
+> transition passes the required action-schema-derived checks.
 
-A certificate is a finite witness checked at compile time. For example, a
-binding witness shows that every variable in `stack(X,Y)` is supplied by the
-trigger or positive context; a completion-effect summary records which PDDL
-literals may be added or deleted when `!on(X,Y)` successfully returns.
-Certification checks all applicable soundness conditions using such witnesses;
-certified denotes only an artifact that passes every required check. Otherwise,
+An obligation is a condition the compiler must establish. A witness is finite
+evidence for one obligation. For example, a binding witness shows that every
+variable in `stack(X,Y)` is supplied by the trigger or positive context. A
+certificate is the structured record collecting an artifact's applicable
+obligations and witnesses; a transition certificate records portfolios,
+effect-summary completeness, threats, and a safe order. Certification checks that record;
+certified denotes only an artifact that passes all required checks. Otherwise,
 the compiler returns a structured rejection.
 
 ## Canonical Formal Notation
@@ -72,7 +73,7 @@ second tuple or reuse one symbol for a different semantic role.
 - `b = <g_b,C_b,beta_b,Sigma_b,pi_b>` is one candidate branch. `Sigma_b` is its
   conditional module-completion summary, with `MustAdd`, `MayAdd`, `MayDelete`,
   numeric-delta, and keyed resource-mode projections. `Cert_D(b)` is its
-  candidate soundness predicate, and `covers_D(b,e)` is evidence coverage.
+  branch-certification predicate, and `covers_D(b,e)` is evidence coverage.
 - `C_D^nr(E)` is the set of nonrecursive action-schema-derived obligations, and
   `realizes_D(b,c)` is their schema-achievement relation.
   `Omega_{D,E}` contains evidence coverage, nonrecursive schema-achievement
@@ -239,7 +240,8 @@ equality; machine manifests may retain integrity digests for artifact checking.
 Use one symbol-invariant example whenever a certificate would otherwise be
 opaque. For target-preserving resource discharge, an illustrative acquisition deletes
 `free(R)` and adds `held(R,O)`; the method must state that names are placeholders
-and that the certificate is inferred from shared arguments and PDDL effects. For
+and that the resource-discharge witness is derived from shared arguments and
+PDDL effects. For
 a mixed transition such as `at(P,L) and fuel(V)=3`, explain that one symbolic
 effect proof must establish both conditions in the same state. Do not replace
 these semantics with labels such as `certificate-dependent`.
@@ -251,8 +253,8 @@ The abstract follows a five-part structure:
 1. **Problem:** generalized planners return reusable policies, while BDI agents
    require executable and maintainable plan libraries.
 2. **Gap:** direct translation may omit executable plans for subsidiary goals
-   and does not support safe temporal composition. Keep detailed certificate
-   names out of the abstract.
+   and does not support safe temporal composition. Keep detailed witness and
+   check names out of the abstract.
 3. **Method:** translate typed controlled-language requests to parametric LTLf,
    validate and lift generalized-planning evidence, complete missing achievable
    subgoals from PDDL action schemas, select a compact executable core, and
@@ -277,13 +279,13 @@ software components.
    normalization relates a partial state and one achievement to an action macro.
    Then explain why compilation is not formatting: a policy may rely on
    subsidiary conditions for which an executable library has no plan. Defer the
-   complete certificate inventory to the Method.
+   complete certification inventory to the Method.
 3. Establish that the query interface accepts ordinary achievement conditions
    and their temporal extensions. Then explain why a TEG, meaning a goal over a
    finite state trace, cannot generally be replaced by an arbitrary sequence of
    achievement calls. Keep the Introduction at this level; defer the canonical
    achievement embedding, LTLf syntax, DFA guards, monitor boundaries, and
-   individual certificates to the formal sections.
+   individual checks and witnesses to the formal sections.
 4. Keep Figure 1 at the representation-boundary level: domain and provider
    evidence compile once into `M_D`, while each bound query appends
    `Q_q` to the maintained library. Introduce the Blocks running example only
@@ -356,7 +358,7 @@ query-local controllers.
 ### 4. Certified Policy Lifting into a Reusable Atomic Core
 
 Open with the two certification boundaries, then present the query-independent
-post-evidence domain compiler. Its candidate and certificate representation is
+post-evidence domain compiler. Its candidate and witness representation is
 defined at the trigger--context--body BDI plan-rule level; the implemented final
 rendering targets AgentSpeak(L), and the section outputs the reusable core
 `M_D`.
@@ -366,7 +368,8 @@ certification establishes `Cert_D(b)` and `Sigma_b`; selected-core feasibility
 establishes evidence/schema coverage, `Closed_D(M_D)`, and compatible progress
 and dependency ranks; query-side certification establishes the preservation
 portfolio `Pi_chi` and serialization `ell_chi` for each DFA progress guard.
-Deterministic translation validation is an input gate, not a fourth certificate.
+Deterministic translation validation is an input gate, not an additional
+compiler-certification stage.
 
 1. Normalize the raw provider artifact `E_raw` into a provider-neutral singleton-goal evidence
    program. Do not expose an internal class name in the main narrative.
@@ -386,20 +389,20 @@ Deterministic translation validation is an input gate, not a fourth certificate.
    modes, not from an arbitrary action-depth bound. Validated evidence macros
    are never truncated. Cyclic dependencies require provider evidence or a
    separately certified recursive module; this is not an instance-level planner.
-4. Summarize the implemented certificates in one table: binding, symbolic
+4. Summarize the implemented certification checks in one table: binding, symbolic
    executability, achievement, internal-call closure, relation-ranked recursive progress,
    finite resource-mode discharge, and Clingo-selected acyclic cross-predicate
    preparation with strictly decreasing dependency ranks.
 5. Explain feasible-core optimization over evidence and action-schema-derived
    candidates.
    The precise claim is global optimality only inside the generated certified
-   certified candidate set `C^check_{D,E}`.
+   candidate set `C^check_{D,E}`.
 6. Render the selected modules as the certified atomic module core `M_D`. State
    explicitly that AgentSpeak(L) is the evaluated realization, not the
    definition of the compilation contribution and not a second maintained
    library.
 
-Detailed certificate definitions may remain in the main paper when required to
+Detailed witness definitions may remain in the main paper when required to
 understand a contribution. Long proof steps and secondary implementation cases
 belong in supplementary material so that final results fit the seven-page AAAI
 technical-content limit.
@@ -472,7 +475,7 @@ presentation.
 
 The main paper should contain:
 
-1. **Local atomic-branch soundness:** under its certified context and
+1. **Local atomic-branch soundness:** when its context holds under a
    type-consistent grounding, an accepted branch is executable and establishes
    its trigger when it returns, assuming called modules satisfy their own
    conditional module-completion summaries.
@@ -481,7 +484,7 @@ The main paper should contain:
    the generated certified candidate set `C^check_{D,E}`.
 3. **Supported-transition composition soundness:** if signed obligations are
    initially satisfied or established by their certified repair plans, selected
-   modules terminate, and their certified completion effects preserve earlier
+   modules terminate, and their conservative completion summaries preserve earlier
    positive and negative obligations, a complete repair pass retries exactly
    when the monitor still reports its source state. If the source is left during
    a call, the remaining suffix stays PDDL-executable and prefix-preserving at
@@ -550,7 +553,7 @@ normalized evidence hash:
    action-only producer candidates.
 3. **Maximum Feasible:** add progress-, preparation-, and resource-certified
    decomposed candidates, then select a maximum-cardinality jointly feasible
-   branch set under all hard certificates.
+   branch set under all hard certification constraints.
 4. **Full GP2PL:** minimize branch, context, and body cost over exactly the
    same generated certified set and hard constraints as Maximum Feasible.
 
@@ -566,7 +569,7 @@ publication fields.
 1. **Unprotected Serialization:** canonical within-edge serialization, the same
    MONA-derived DFA,
    and primitive-step monitor, but no threat ordering or preservation portfolio.
-2. **Module-Return Monitor:** retain completion-effect certification and balanced
+2. **Module-Return Monitor:** retain certified completion summaries and balanced
    control, but check the DFA only after an invoked atomic achievement module
    finishes all primitive actions and returns control to the query controller.
    Omit primitive-prefix source-invariant filtering because intermediate
@@ -578,12 +581,12 @@ publication fields.
    configuration.
 
 These four cumulative atomic rows are the complete registered matrix. Do not
-claim additional one-certificate-off experiments: retaining an uncertified
+claim additional one-check-off experiments: retaining an uncertified
 branch would be unsound, while removing one branch-constructor class changes
 internal-call feasibility rather than isolating a single subsequent mechanism.
 Use the 13-case
-fail-closed and symbol-invariance matrix to test the individual certificate
-families. Likewise, signed-negative and bounded-numeric cases stay in the full
+fail-closed and symbol-invariance matrix to test the individual witness and
+check families. Likewise, signed-negative and bounded-numeric cases stay in the full
 temporal benchmark with explicit support and failure statuses; do not invent
 unregistered capability-switch rows. The historical sequence-only controller
 may appear only as an evaluation-only weak reference; it must not return as an
@@ -789,7 +792,7 @@ training curriculum for a compatible generalized-planning provider, provided
 that generated problems validate against the domain and a disjoint held-out set
 is sealed first. Describe this as scaling evidence acquisition and domain
 onboarding, not as expanding the supported PDDL-times-LTLf fragment, proving
-representative sampling, or changing any compiler certificate.
+representative sampling, or changing any certification criterion.
 
 ## Supplementary and Public Artifact Contract
 
@@ -820,7 +823,7 @@ The versioned public evidence is split into:
 - `paper_artifacts/temporal_semantic_conformance/v1` for operator-level semantic
   checks; and
 - `paper_artifacts/gp2pl_evaluation/v1` for exact atomic libraries, compact
-  execution records, certificate challenges, distributions, and hashes.
+  execution records, certification challenges, distributions, and hashes.
 
 GP2PL code uses Apache-2.0 and original GP2PL data uses CC BY 4.0. External PDDL
 and MOOSE materials retain upstream rights. Three public benchmark repositories
@@ -956,7 +959,7 @@ Use this exact back-to-front layer order in PowerPoint's Selection Pane:
 3. panel dividers and plot grid lines;
 4. semantic connectors and arrow labels;
 5. operation, artifact, state, and code boxes;
-6. certificate badges, state circles, checks, and rejection marks;
+6. certification badges, state circles, checks, and rejection marks;
 7. headings, annotations, and abbreviated-name notes.
 
 Name every shape with its object identifier below, for example `F1-D3` or
@@ -999,7 +1002,7 @@ Use a compact vertical flow with one side input and one final library artifact:
 - Do not use a dashed outer library container or the implementation-level
   `reuse module contracts` feedback connector.
 
-Do not place PDDL syntax, MOOSE, Clingo, MONA, Jason, VAL, certificate tables,
+Do not place PDDL syntax, MOOSE, Clingo, MONA, Jason, VAL, certification tables,
 `Layer A/B/C`, `tg_state`, a second domain library, or a language model inside
 Figure 1. Those details belong in Figure 2, the algorithms, and Evaluation.
 Draft caption:
@@ -1069,7 +1072,7 @@ of Figure 2(a), rather than repeating candidate construction:
   invocation `!on(y,z)`.
 - Show the relevant selected slice $b_0,b_1,b_2\in\mathcal M_D$: preparation of
   `on/2` through `!clear`, direct production of `clear/1`, and direct production
-  of `on/2`. Do not include candidate tables, certificate matrices, or Clingo.
+  of `on/2`. Do not include candidate tables, certification matrices, or Clingo.
 - Branch $b_0$ expands the goal stack to `!clear(y); !on(y,z)` without changing
   the PDDL state. Branch $b_1$ executes `unstack(z,y); putdown(z)`, and branch
   $b_2$ executes `unstack(y,x); stack(y,z)`.
@@ -1358,7 +1361,7 @@ experimental success counts.
 
 ### Table 2: Candidate Constructors and Soundness Obligations
 
-Merge the previous schema-grammar and certificate tables into one full-width
+Merge the previous schema-grammar and certification tables into one full-width
 table with columns:
 
 ```text
@@ -1484,7 +1487,7 @@ totals and scope-qualified external-reference endpoints in prose. The Technical
 Supplement and machine-readable artifact preserve all raw domain--seed,
 per-profile, paired-input, and external-reference values. The supplementary artifact should always
 keep translation errors, schema validation
-errors, unsupported DFA structure, certificate rejection, Jason failure,
+errors, unsupported DFA structure, certification rejection, Jason failure,
 timeout, VAL failure, and DFA-trace rejection as separate statuses. A failed or
 timed-out Jason action prefix is diagnostic evidence, not a successful plan.
 
@@ -1495,7 +1498,7 @@ count, or individual case identifier in the main paper. Worker and resource
 details remain in the Technical Supplement; source hashes and run identifiers
 do not. A concrete failure mode
 may remain in the main paper when it explains a method limitation, but express
-it at the level of the missing certificate or hypothesis-class boundary rather
+it at the level of the missing witness or hypothesis-class boundary rather
 than as runner bookkeeping.
 
 ### AAAI Figure and Table Style Contract
@@ -1541,7 +1544,7 @@ than as runner bookkeeping.
   250 dpi at final size.
 - Use a colorblind-safe palette and redundant shape/line encodings. Figure text
   and mathematical symbols must remain readable in grayscale; never convey a
-  certificate or failure state by color alone.
+  certification or failure state by color alone.
 - Conceptual Figures 2--3 and Supplementary Figure S1 may be authored in
   PowerPoint and exported as vector PDF. Any optional diagnostic plot must be
   regenerated by its checked-in script from frozen records and must not be
@@ -1638,7 +1641,7 @@ Use the following target allocation:
 | Experimental evaluation | 1.6 |
 | Related work, conclusion, and future work | 0.5 |
 
-When results are inserted, compress detailed certificate prose into tables and
+When results are inserted, compress detailed certification prose into tables and
 move long proofs to supplementary material before removing definitions or
 failure boundaries. The paper source, this outline, and both normative research
 design documents must never disagree about architecture, terminology, or

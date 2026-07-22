@@ -1,4 +1,4 @@
-"""Conservative completion-effect certificates for selected atomic BDI modules.
+"""Conservative completion-effect summaries for selected atomic BDI modules.
 
 Paper correspondence: Section 5 defines conditional completion summaries,
 positive-literal threats, negative preservation, and preserving branch

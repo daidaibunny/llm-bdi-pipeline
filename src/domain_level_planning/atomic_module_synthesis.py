@@ -3754,7 +3754,7 @@ def _select_branches_with_clingo(
 				(
 					"maximize well-founded relational recursive capabilities",
 					"maximize compatible well-founded recursive capabilities",
-					"maximize selected branch count subject to all hard certificates",
+					"maximize selected branch count subject to all hard certification constraints",
 				)
 				if selection_strategy == AtomicSelectionStrategy.MAXIMAL_CERTIFIED
 				else (

@@ -54,7 +54,8 @@ Libraries for Achievement and Temporally Extended Goals}
 Generalized planning learns reusable behavior for problem families, whereas
 Belief--Desire--Intention (BDI) agents execute plan libraries. Direct adaptation
 leaves a representation gap: singleton-goal evidence may omit modules for
-subsidiary achievements and does not certify temporal composition. We introduce
+subsidiary achievements and does not establish sound temporal composition. We
+introduce
 \methodname{} (Generalized Planning to Plan Libraries). Its typed input
 contract maps controlled-language requests to externally bound parametric
 \ltlf{} query specifications consistent with the planning domain. Its compiler
@@ -136,8 +137,9 @@ Figure 2 artwork placeholder\\[8pt]
 normalizes and lifts evidence, constructs and certifies schema-derived
 candidates, and selects $\mathcal M_D=\mathcal L_D^{[0]}$. For the bound Blocks
 World tower query, the query-specific stage reuses selected completion summaries
-to certify a preservation portfolio $\boldsymbol\Pi_\chi$ and serialization
-$\boldsymbol\ell_\chi$ for its MONA-derived conjunctive progress guard, then
+to construct a transition certificate recording the preservation portfolio
+$\boldsymbol\Pi_\chi$ and serialization $\boldsymbol\ell_\chi$ for its MONA-derived
+conjunctive progress guard, then
 renders the certified order as a balanced transition-repair tree. Here, repair
 uses a certified plan to satisfy an unmet signed guard literal; a satisfied
 literal requires no action.}
@@ -146,7 +148,7 @@ literal requires no action.}
 
 GP2PL makes four contributions: an evidence-to-library compiler that supplies
 omitted producible subgoals and selects a compact, internally closed atomic core;
-certificate conditions for executable, terminating, and composable modules; a
+machine-checkable conditions for executable, terminating, and composable modules; a
 typed controlled-language contract for bound achievement goals and TEGs, with
 exact semantic translation evaluation on a TEG benchmark; and query-specific
 temporal controllers that reuse and extend one maintained BDI library.
@@ -176,7 +178,7 @@ arithmetic, temporal formulae, and planning models, broader repair
 certification, candidate-size scaling, action-quality overhead, and same-scope
 trace-search comparisons under fail-closed certification. Pinned PDDL generators with
 held-out-disjoint instances can extend domain onboarding without changing the
-certificates.
+certification criteria.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}

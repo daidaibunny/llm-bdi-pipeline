@@ -2,7 +2,7 @@
 
 This document is the maintained pre-paper decision record for the research
 pipeline. It records the current architecture, evidence/compiler boundaries,
-benchmark scope, certificate requirements, supported fragments, and explicit
+benchmark scope, certification requirements, supported fragments, and explicit
 limitations. It is not the paper narrative and MUST be updated whenever an
 implementation change alters a research-facing claim. The normative design for
 parametric natural-language LTLf input and temporal evaluation is maintained in
@@ -76,15 +76,19 @@ internal-call closure requirements, incompatibility constraints, and a
 lexicographic cost objective; Clingo returns an optimal selected subset within
 the generated certified candidate set.
 
-A **certificate** is a machine-recheckable witness that justifies one compiler
-claim. It must contain enough structured information for an independent checker
-to replay the relevant PDDL schema reasoning; a prose metadata label is not a
-certificate. The current certificate families are binding, schema
-executability, target achievement, evidence coverage, internal-call closure,
-well-founded recursive progress, target-preserving resource discharge, and
-target-preserving DFA guard serialization. Optimality is claimed only after all
-hard certificate obligations hold and only within the generated certified
-candidate set.
+An **obligation** is a condition the compiler must establish. A **witness** is
+finite evidence for one obligation, such as a symbolic derivation, ranking, or
+resource-mode path. A **certificate** is the finite, machine-recheckable record
+that identifies an artifact's applicable obligations and their witnesses; a
+prose metadata label is not a certificate. **Certification** checks that record,
+and **certified** denotes only an artifact that passes all required checks.
+`Cert_D(b)` is the branch-certification predicate, not a certificate object.
+Branch-local witnesses cover binding, symbolic execution, achievement,
+completion effects, recursive progress, and resource discharge; coverage,
+internal-call closure, and compatible dependency ranks are set-level checks. A
+transition certificate records its selected portfolios, effect-summary
+completeness, induced threats, and safe serialization. Optimality is claimed only within the
+resulting certified candidate set.
 
 The term **producible target universe** has one exact meaning. If
 `goalPred(E)` is the set of predicates targeted by positive evidence and
@@ -102,13 +106,6 @@ transitive calls. Primitive PDDL actions are not internal achievement calls.
 Do not use the unqualified phrase `schema closure` for both target expansion and
 this selection obligation.
 
-Use **certificate** only for a finite witness checked before emission, such as a
-symbolic-progression derivation, ranking function, resource-discharge path, or
-preservation order. **Certification** is the process that checks all applicable
-soundness conditions using those witnesses; **certified** denotes an artifact
-that passes every required check. `Cert_D(b)` is the branch-certification
-predicate, not the certificate object itself.
-
 ## Canonical Formal Notation
 
 The manuscript, supplement, figures, and paper-facing reports use one symbol
@@ -121,7 +118,7 @@ for each semantic object:
   Generator revision, digest, parameters, seeds, output manifest, and a
   content-disjoint sealed test split are then part of provenance. This scales
   evidence acquisition and domain onboarding, not the compiler's supported
-  fragment or certificates. `E_raw` is one raw provider artifact;
+  fragment or certification criteria. `E_raw` is one raw provider artifact;
   `E_0` is the provider-normalized evidence program; and
   `E = CanonicalLift_D(E_0)` is its typed, alpha-normalized singleton-goal
   evidence program. Canonical lifting preserves repeated-variable sharing and
@@ -136,8 +133,8 @@ for each semantic object:
 - `G_D^prod(T)` is the producer--precondition dependency graph reachable from
   target set `T`; schema regression is admitted only when this graph is acyclic.
 - `b=<g_b,C_b,beta_b,Sigma_b,pi_b>` is one candidate branch. `Sigma_b` is its
-  conditional module-completion summary and `Cert_D(b)` its candidate soundness
-  predicate.
+  conditional module-completion summary and `Cert_D(b)` its
+  branch-certification predicate.
 - `rho_b` is a same-predicate recursive ranking, `kappa_M` a cross-module
   dependency ranking, and `G_b^res=(V_b^res,E_b^res)` the finite keyed
   resource-mode graph used by a target-preserving resource-discharge
@@ -307,9 +304,9 @@ domain, train/test split, and evidence hash.
 | Method | Native behavior |
 | --- | --- |
 | Evidence Only | Validate each evidence macro by symbolic PDDL execution and render the surviving lifted macro plans. Do not expand over the producible target universe, add internal subgoal modules, or optimize branches. |
-| Direct Producers | Add every certificate-valid action-only PDDL producer candidate for the producible target universe. |
+| Direct Producers | Add every certified action-only PDDL producer candidate for the producible target universe. |
 | Maximum Feasible | Generate the full certified candidate set and use Clingo to retain a maximum-cardinality jointly feasible program under the same internal-call, ranking, and resource constraints as the full method. This is not an unchecked union of individually certified branches. |
-| Full GP2PL | Minimize branch, context, and body cost over the same generated certified set and hard certificate constraints used by Maximum Feasible. |
+| Full GP2PL | Minimize branch, context, and body cost over the same generated certified set and hard certification constraints used by Maximum Feasible. |
 
 Evidence Only is deliberately a strong baseline rather than an unchecked text translator.
 It preserves all provider macros that meet the same schema validation used by
@@ -319,11 +316,11 @@ can be attributed to compact selection. The machine-readable variant values are
 `validated_evidence_adapter`, `action_only_closure`,
 `maximal_certified_program`, and `full`; manuscript tables use the short names
 above. These four cumulative variants are the complete registered atomic
-baseline and ablation matrix. Individual progress-, resource-, and preparation-
-certificate switches are not registered experiments: disabling a certificate
-while retaining the branch would be unsound, while removing one family changes
+baseline and ablation matrix. Individual progress, resource, and preparation
+checks are not registered switches: disabling a required check while retaining
+the branch would be unsound, while removing one constructor family changes
 the feasible closure problem rather than isolating a single downstream choice.
-Those certificate families are instead exercised by the fail-closed challenge
+Those mechanisms are instead exercised by the fail-closed challenge
 matrix and reported through structured rejection diagnostics.
 
 ### Primary Temporal Comparison
@@ -506,8 +503,8 @@ infrastructure failure.
 The main manuscript reports paired endpoint results through generated tables,
 not a multi-panel empirical figure. This is appropriate because the benchmark
 domains are heterogeneous and the core claims concern exact valid-case counts,
-library structure, and certificate effects rather than one shared continuous
-difficulty axis. `scripts/generate_aaai_figures.py` may still regenerate the
+library structure, and effects of certification checks rather than one shared
+continuous difficulty axis. `scripts/generate_aaai_figures.py` may still regenerate the
 former three-panel view from the complete frozen
 `paired_ablation_results.json` as a supplementary diagnostic artifact. Dirty
 revisions, incomplete seed/domain/variant matrices, unpaired hashes, or protocol
@@ -643,8 +640,8 @@ literal-and-conjunction subset. Its formula `psi` is written without a temporal
 operator in the query artifact and embedded as `F(psi)` for execution. The
 remaining formulae are TEGs. `Phi_bench` is the TEG family generated
 from the five registered formula profiles. `Phi_cert(D, M_D)` is the subset of
-validated bound formulas whose required distance-reducing DFA obligations have
-all compiler certificates. Parsing establishes only `Phi_syn` membership;
+validated bound formulas whose required distance-reducing DFA obligations pass
+all compiler certification checks. Parsing establishes only `Phi_syn` membership;
 query soundness is conditional on `Phi_cert`, and the reported TEG experiment is
 over `Phi_bench`.
 
@@ -675,7 +672,7 @@ The validation module uses four independent gates:
    formulas. It explores the reachable product automaton over the complete
    joint Boolean alphabet. If one DFA accepts and the other rejects, the
    shortest discovered valuation sequence is persisted as a counterexample
-   certificate. Equality is semantic, not textual: `F(a & b)` and `F(b & a)`
+   witness. Equality is semantic, not textual: `F(a & b)` and `F(b & a)`
    pass when their atom tables denote the same PDDL atoms.
 3. **Hidden witness validation** grounds the accepted prediction with
    `theta_i`, replays every primitive action in `pi_i` from the initial state,
@@ -751,7 +748,7 @@ The paper execution entry point is
 timestamped atomic-library batch without retraining MOOSE, compiles every case
 independently, and records query compilation, Jason, PDDL replay, neutral-goal
 VAL, gold-DFA, and predicted-DFA outcomes separately. Unsupported DFA structure
-and missing certificates are structured compiler rejections rather than Jason
+and missing required witnesses are structured compiler rejections rather than Jason
 failures. Results are aggregated by domain and formula profile. The public
 record retains case outcomes and validation statuses; verbose DFA, Jason,
 trace, and validator artifacts remain local diagnostics.
@@ -794,7 +791,7 @@ several plan-template kinds at the same time.
 | `already_true_plan_template` | The requested fluent is already true, so the plan body is empty except for rendered `true`. | `+!clear(X) : clear(X) <- true.` |
 | `action_only_plan_template` | The body contains only primitive PDDL actions. This includes fixed backend macro evidence, where a macro is a fixed action sequence, not a new PDDL action. | Logistics `+!at(P,L)` may execute `load_truck; drive_truck; unload_truck`. Blocks `+!clear(X)` may execute `unstack(Y,X); put_down(Y)`. |
 | `subgoal_decomposed_plan_template` | The body contains at least one internal AgentSpeak achievement subgoal such as `!clear(Y)`. | Blocks `+!on(X,Y)` may call `!clear(Y); !on(X,Y)` when `Y` is not clear. |
-| `numeric_already_true_plan_template` | A bounded integer numeric-resource achievement is already at the requested target value. This kind is chosen from the numeric certificate, not from the empty body alone. | `+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N == 0 <- true.` |
+| `numeric_already_true_plan_template` | A bounded integer numeric-resource achievement is already at the requested target value. This kind follows the numeric target semantics, not the empty body alone. | `+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N == 0 <- true.` |
 | `numeric_resource_progress_plan_template` | A bounded integer numeric-resource achievement executes a validated unit-progress macro and recursively asks for the same target value. | `+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N > 0 <- craft_wooden_pogo; !pogo_sticks_to_make(0).` |
 
 The metadata reports a library profile such as `mixed_atomic_template_library`
@@ -828,7 +825,7 @@ Depots `drop(?hoist, ?crate, ?surface, ?place)` with preconditions such as
 MOOSE is the only implemented and experimentally evaluated Evidence Module
 provider. `PolicyEvidenceProgram` is an extension interface: another provider
 may be added later if its adapter emits the same normalized singleton-goal
-rules and passes the same PDDL certificates. This interface does not imply that
+rules and passes the same PDDL-derived checks. This interface does not imply that
 another provider has already been reproduced or has MOOSE-equivalent results.
 
 ### MOOSE Parameter Provenance
@@ -913,8 +910,8 @@ blocking makes the signature space finite but can still enumerate a
 combinatorial number of lifted requirement sets. A real Logistics probe exceeded
 600 seconds under that experimental configuration, whereas the retained
 acyclic compiler completed in seconds. Cyclic producer dependencies therefore
-require an evidence-guided mode-path or a separately proved lexicographic
-progress certificate before they enter the supported compiler fragment.
+require an evidence-guided mode path or a separately proved lexicographic
+ranking witness before they enter the supported compiler fragment.
 
 Resource-mode discharge separately searches a finite symbolic mode graph and
 forbids repeated alpha-normalized resource modes. Consequently, a schema
@@ -1012,7 +1009,7 @@ selected edge receives natural-number caller and callee ranks with
 `caller_rank > callee_rank`, while its local negative precondition guard falls
 from unsatisfied to satisfied before the original target is retried.
 Same-predicate recursion is exempt from this predicate-rank rule only when it
-has the separate relational decrease certificate above.
+has the separate relational-decrease witness above.
 
 Relation threats are evaluated over this selected preparation graph, not the
 larger raw candidate graph. A branch such
@@ -1175,7 +1172,7 @@ inapplicable discharge branch is skipped by normal AgentSpeak context matching.
 
 The optimization is lexicographic. Hard schema/evidence/closure obligations
 must first be satisfiable; then Clingo first maximizes relational recursive
-capabilities with strict well-founded certificates, next maximizes compatible
+capabilities with strict well-founded ranking witnesses, next maximizes compatible
 acyclic precondition-discharge capabilities, and finally minimizes branch
 count, context count, and body cost. The first priority reflects unbounded
 structural generalization rather than a domain name or predicate name.
@@ -1263,9 +1260,9 @@ rejected if their declared type requirements are inconsistent. Single-valued
 predicate invariants inferred from paired PDDL add/delete schemas also reject a
 guard that requests two provably different values for the same key.
 
-If achieving literal `G2` may delete literal `G1`, the certificate requires
-`G2` before `G1`. Only literals on the same DFA transition may be reordered;
-different transitions retain DFA order. The persisted certificate records the
+If achieving literal `G2` may delete literal `G1`, certification orders `G2`
+before `G1`. Only literals on the same DFA transition may be reordered;
+different transitions retain DFA order. The transition certificate records the
 summary method as `pddl_typed_conditional_relational_fixed_point`, the ordered
 literal indexes, all induced threat edges, the functional-invariant count, and
 the `atomic_module_completion` observation boundary.
@@ -1273,9 +1270,9 @@ the `atomic_module_completion` observation boundary.
 An acyclic threat graph uses universal topological serialization. For a cyclic
 universal summary, the compiler may derive a candidate support-depth order:
 every positive goal uses one binary relation with a compiler-generated
-relational decrease certificate, the requested relation graph is functional and
-acyclic, and supports can be ordered before dependants. That order is not by
-itself an execution certificate. Every selected branch must also preserve all
+relational-decrease witness, the requested relation graph is functional and
+acyclic, and supports can be ordered before dependants. That order alone does
+not establish execution soundness. Every selected branch must also preserve all
 earlier ranked achievements. A recursive repair is admitted only when it
 discharges one explicit negative context obligation, its preparation module has
 a complete summary, and its recursive self-call is rewritten to the enforced
@@ -1295,8 +1292,8 @@ This prevents a branch unsafe for a late occurrence from globally removing a
 recursive branch that is safe and necessary at an earlier occurrence. Plan
 contexts such as `not clear(X)` and `not holding(X)` are alternative
 applicability cases; the compiler does not incorrectly require one preparation
-module to preserve every alternative context simultaneously. Persisted
-certificates therefore record selected branch names by literal index and report
+module to preserve every alternative context simultaneously. The transition
+certificate therefore records selected branch names by literal index and reports
 recursive closure only when at least one selected branch actually contains an
 internal achievement call.
 
@@ -1323,8 +1320,8 @@ literal without a complete preserving action-only branch remains
 observation-only and cannot fall back to an uncertified atomic trigger.
 For example, `in(package,vehicle) & capacity(vehicle)=2` may call a certified
 pickup branch first and observe the resulting capacity equality second. This is
-a cross-literal preservation certificate, not a completeness claim for
-arbitrary numeric planning.
+a cross-literal preservation witness in the transition certificate, not a
+completeness claim for arbitrary numeric planning.
 For a positive numeric equality, the query compiler may additionally derive a
 one-action progress branch directly from a PDDL numeric effect. A unit delta is
 admitted only under a strict directional guard, such as `N>0` before a
@@ -1359,27 +1356,27 @@ to denote both a store and a waypoint.
 If independently summarized branches induce a conservative cycle, one
 primitive action may replace that serialization only when symbolic execution
 proves that its complete net effect establishes every Boolean and numeric
-literal in the guard. This is a joint guard-establishment certificate, not a domain-specific
-numeric operator or an unrestricted arithmetic planner.
+literal in the guard. This is a joint guard-establishment certificate, not a
+domain-specific numeric operator or an unrestricted arithmetic planner.
 The query-local helper is callable from every positive guard literal established
 by that action. Every call carries the complete anchor argument tuple used by
-the symbolic binding certificate. Therefore an already-satisfied first literal
+the binding witness. Therefore an already-satisfied first literal
 cannot make the action unreachable while another established sibling remains
 false, and a sibling with fewer arguments cannot silently drop a query binding.
 It never falls back to parser order or a monotonic step-helper path. Negative
 guard literals remain context checks and are never converted into negative
 achievement subgoals.
 
-Negative predicates now carry fail-closed preservation and establishment
-certificates. For a guard
+For negative predicates, the transition certificate records fail-closed
+preservation and establishment witnesses. For a guard
 such as `delivered(P) & not damaged(P)`, every feasible conditional `MayAdd`
 effect of the selected `!delivered(P)` module is type-unified with
 `damaged(P)`. A branch that may add the forbidden atom cannot enter the
 unfiltered transition. The compiler either enforces a query-local action-only
 selection containing only goal-achieving branches that preserve positive
 siblings and negative guards, or raises `negative_guard_not_preserved` before
-ASL rendering. The certificate records the concrete negative literals,
-preservation status, selected branch names, and the
+ASL rendering. The transition certificate records the concrete negative
+literals, preservation status, selected branch names, and the
 `atomic_module_completion` observation boundary. Predicate/action renaming and
 PDDL sibling types do not alter this rule.
 
@@ -1476,13 +1473,13 @@ The execution environment advances the real deterministic finite automaton
 after the initial valuation and after every successful primitive PDDL action.
 It updates query-local monitor-state and accepting beliefs used by the top-level
 AgentSpeak controller. These beliefs are controller interface state, not domain
-fluents and not exported actions. Before certificate construction, the
+fluents and not exported actions. Before transition-certificate construction, the
 converter expands the DFA's Boolean transition relation into separate
 conjunctive transition records. This is a representation normalization rather
 than rejection of Boolean alternatives: the runtime monitor still evaluates
 the complete DFA transition relation. Same-source/same-target records are
-grouped only by a certified common achievement objective. Consequently a
-strong-until formula detects an
+grouped only by a common achievement objective established during
+certification. Consequently a strong-until formula detects an
 intermediate violation even when an atomic macro later restores the fluent.
 This gives exact trace observation for the declared `F`, `X`, `U`, conjunction,
 and literal-negation fragment. It does not prove that the generated action
@@ -1581,7 +1578,7 @@ action-schema-derived candidates, but `8puzzle-1tile` requires graph-search and
 permutation-progress reasoning:
 placing one tile depends on moving the blank through a grid while preserving
 solvability constraints. That structure needs a graph-search controller,
-planning-program artifact, or a separate progress certificate before it can be
+planning-program artifact, or a separate ranking witness before it can be
 compiled into a compact AgentSpeak(L) atomic library. Until then, the correct
 result is `unsupported_by_current_compiler`, not a domain-specific patch.
 
@@ -1591,7 +1588,7 @@ derive from the current evidence. A progress or ranking argument is a
 well-founded measure proving that each recursive call moves closer to success;
 for example, `clear(X)` in Blocks can use the number of blocks above `X` as a
 decreasing measure, while a graph-search puzzle may require reasoning over
-blank reachability and permutation distance. Until such a certificate is
+blank reachability and permutation distance. Until such a witness is
 generated and validated, those goals remain outside the selected benchmark
 claim rather than being patched with domain-specific code.
 
@@ -1690,7 +1687,7 @@ five. Fourteen domains are complete under every seed, accounting for
 Logistics and Depots. Diagnostic inspection finds missing long cross-mode
 provider macros beside a cyclic `at`/`in` constructor boundary in Logistics,
 and nested typed support-resource choices beyond the current already-bound
-capacity-discharge certificate in Depots. These diagnoses explain the observed
+capacity-discharge witness in Depots. These diagnoses explain the observed
 implementation boundary but are not impossibility proofs for the domains.
 
 The compact record is

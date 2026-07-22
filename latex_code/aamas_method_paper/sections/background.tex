@@ -82,16 +82,22 @@ $\chi$ has normal form
 \mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle,
 \]
 where the signed transition obligation $\mathcal O_\chi$ separates positive
-achievements from atoms that must remain absent. Here a certificate is a
-compile-time, machine-checkable obligation. The certificate-admitted subset
+achievements from atoms that must remain absent. We reserve four related terms.
+An obligation is a condition the compiler must establish. A witness is finite
+evidence for one obligation, such as a symbolic-progression derivation,
+decreasing rank, or resource-discharge path. A certificate is the structured
+record that identifies an artifact's applicable obligations and their witnesses;
+for example, a transition certificate records portfolios, effect-summary
+completeness, threats, and a safe order. Certification checks that record, and certified
+denotes only an artifact that passes all required checks. The certified subset
 $\Phi_{\mathrm{cert}}(D,\mathcal M_D)\subseteq\Phi_{\mathrm{syn}}$ contains the
-validated bound formulas whose DFA progress obligations satisfy
+validated bound formulas whose DFA progress transitions pass the checks in
 Sec.~\ref{sec:temporal-composition}; soundness claims apply to this subset and
 empirical claims to accepted members of $\Phi_{\mathrm{bench}}$.
 A query-local monitor evaluates the DFA initially and after every successful
 primitive PDDL action.
 
-\subsection{Certified Compilation Problems}
+\subsection{Compilation Problems and Acceptance}
 
 \paragraph{Atomic-core compilation.}
 Given $D$, training instances
@@ -104,8 +110,8 @@ For a validated bound query
 $\widehat\tau_q=(\tau_q,\theta_q)$ whose binding maps each parameter to a
 type-compatible object, query compilation takes $\mathcal D_q$ and $\mathcal M_D$
 and produces $\mathcal Q_q$: top-level, DFA-dispatch, and transition-repair
-plans. A conjunctive guard is a certified serialization of signed atomic
-obligations, not a trigger in $\mathcal M_D$. For appended queries
+plans. A conjunctive guard is compiled into a certified serialization of signed
+atomic obligations, not into a trigger in $\mathcal M_D$. For appended queries
 $q_1,\ldots,q_k$, the one maintained domain library is
 \[
 \mathcal{L}_D^{[0]}=\mathcal{M}_D,

@@ -85,11 +85,13 @@ action-schema producer for $p$ has a positive dynamic precondition with
 predicate $r$. Action-schema regression is admitted only on an acyclic such
 graph. This is a structural condition over renamed schemas, not a domain label.
 
-Throughout, a certificate is a finite witness checked before an artifact is
-emitted, such as a symbolic-progression derivation, ranking function, resource
-discharge path, or preservation order. Certification is the process that checks
-all applicable soundness conditions using these witnesses; certified denotes an
-artifact that passes every required check.
+Throughout, an obligation is a condition the compiler must establish. A witness
+is finite evidence for one obligation, such as a symbolic-progression derivation,
+decreasing rank, or resource-discharge path. A certificate is the finite,
+machine-checkable record that identifies an artifact's applicable obligations
+and their witnesses; for example, a transition certificate records portfolios,
+effect-summary completeness, threats, and a safe order. Certification checks that record,
+and certified denotes only an artifact that passes all required checks.
 
 \begin{table*}[htbp]
 \centering
@@ -133,9 +135,9 @@ $\Pi_{\chi,i},\mathcal G_\chi,\prec_\chi$ & Preservation portfolio,
 threat-induced precedence graph, and relation. \\
 $\mathcal C_E,\mathcal C_D(E),\mathcal C_{D,E}$ & Validated evidence branches,
 action-schema-derived branches, and generated union. &
-$\boldsymbol\ell_\chi$ & Certified serialization of a signed obligation. \\
+$\boldsymbol\ell_\chi$ & Serialization recorded by the transition certificate. \\
 $b,\Sigma_b,\operatorname{Cert}_D(b)$ & One candidate branch, its conditional
-completion summary, and soundness predicate. &
+completion summary, and branch-certification predicate. &
 $\mathcal W_{q_s},\mathcal I_{q_s}$ & Waiting self-loop guards and signed source
 invariants. \\
 $\rho_b,\kappa_{\mathcal M},\mathcal G_b^{\mathrm{res}}$ & Same-predicate recursive
@@ -679,14 +681,14 @@ compatible alternatives retains only must effects common to all of them.
 
 \begin{proposition}[Atomic branch soundness]
 If an emitted branch for $p(\bar X)$ has a true context under a type-consistent
-grounding, and each called selected module satisfies its certified achievement
-and completion summary, then the
+grounding, and each called selected module satisfies the achievement contract
+and completion summary established by its certification, then the
 branch is executable and successful return establishes $p(\bar X)$.
 \end{proposition}
 
 \begin{proof}
 Lemma 1 grounds every body element. Consider body positions in order. Primitive
-actions are executable and preserve the certified symbolic state by Lemma 2.
+actions are executable and preserve the checked symbolic state by Lemma 2.
 For an internal call, the induction hypothesis on the internally closed selected
 module
 establishes its goal and its conservative completion summary updates the caller's
@@ -793,6 +795,13 @@ $\mathcal G_\chi=(P_\chi^+,\prec_\chi)$. The ordering constraint requires $G_j$
 before $G_i$. A positive repair is inadmissible when a feasible $\mayadd$ effect
 unifies with a protected $N\in P_\chi^-$.
 \end{definition}
+
+The transition certificate for $\chi$ records the selected occurrence-specific
+portfolios, confirmation that their completion summaries are complete, the
+induced threat relation, and the resulting serialization
+$\boldsymbol\ell_\chi$. It is valid only when every positive repair preserves
+earlier positive and negative obligations; failure to construct it rejects the
+progress edge.
 
 The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
 binary transition-repair tree. A positive leaf observes or achieves its atom; a
@@ -1008,7 +1017,7 @@ away from the forbidden value. These restrictions reduce numeric reasoning to
 the same completion and preservation obligations as predicates; they do not
 claim arbitrary numeric planning.
 
-For numeric preparation, the certified ranking is
+For numeric preparation, the ranking witness is
 $\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,
 where the first component counts unsatisfied producer preconditions and the
 second is the bounded target deficit

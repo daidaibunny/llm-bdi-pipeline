@@ -1136,8 +1136,8 @@ def _canonical_unprotected_literal_serialization(
 			helper_prefix=helper_prefix,
 		)
 	)
-	certificate: dict[str, object] = {
-		"certificate_kind": "evaluation_only_canonical_unprotected_serialization",
+	serialization_record: dict[str, object] = {
+		"record_kind": "evaluation_only_canonical_unprotected_serialization",
 		"ordered_literal_indexes": list(range(len(literal_tuple))),
 		"canonical_positive_literal_order": [literal.atom for literal in literal_tuple],
 		"canonical_negative_literal_order": [
@@ -1152,10 +1152,10 @@ def _canonical_unprotected_literal_serialization(
 		"repair_positive_before_negative": True,
 		"evaluation_only": True,
 	}
-	certificate.update(establishment)
+	serialization_record.update(establishment)
 	return (
 		literal_tuple,
-		certificate,
+		serialization_record,
 		(),
 		{},
 		establishment_aliases,
