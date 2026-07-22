@@ -52,12 +52,13 @@ Libraries for Achievement and Temporally Extended Goals}
 
 \begin{abstract}
 Generalized planning learns reusable behavior for problem families, whereas
-Belief--Desire--Intention (BDI) agents execute plan libraries. Direct adaptation
-leaves a representation gap: singleton-goal evidence may omit modules for
-subsidiary achievements and does not establish sound temporal composition. We
+Belief--Desire--Intention (BDI) agents execute plan libraries. Connecting
+generalized planning to BDI execution exposes a representation gap:
+singleton-goal evidence may omit modules for subsidiary achievements and does
+not establish sound temporal composition. We
 introduce
 \methodname{} (Generalized Planning to Plan Libraries). Its typed input
-contract maps controlled-language requests to externally bound parametric
+contract maps controlled natural-language requests to externally bound parametric
 \ltlf{} query specifications consistent with the planning domain. Its compiler
 turns generalized-planning evidence and
 PDDL action models into certified BDI plan libraries. GP2PL validates and lifts
