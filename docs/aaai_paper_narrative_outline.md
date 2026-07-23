@@ -1008,15 +1008,11 @@ Use a compact vertical flow with one side input and one final library output:
 Do not place PDDL syntax, MOOSE, Clingo, MONA, Jason, VAL, certification tables,
 `Layer A/B/C`, `tg_state`, a second domain library, or a language model inside
 Figure 1. Those details belong in Figure 2, the algorithms, and Evaluation.
-Draft caption:
+Approved caption:
 
-> **Figure 1:** GP2PL separates reusable domain compilation from query-specific
-> compilation. From domain $D$, training instances
-> $\mathcal I_{\mathrm{train}}$, and external singleton-goal evidence
-> $\mathcal E_{\mathrm{raw}}$, it compiles one atomic core
-> $\mathcal M_D=\mathcal L_D^{[0]}$. Each bound query $\widehat{\tau}_q$ yields
-> query-local plans $\mathcal Q_q$, updating the sole maintained library by
-> $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.
+> Figure 1: GP2PL compiles a PDDL domain, training instances, and singleton-goal
+> evidence once into a reusable atomic core; each bound query adds query-local
+> plans to the same maintained library.
 
 ### Figure 2: Inside the Two GP2PL Compiler Stages
 
@@ -1053,21 +1049,13 @@ Typed Query Translation and Preservation-Safe Goal Composition.
 
 Approved caption:
 
-> Figure 2: Inside the two GP2PL compiler stages. (a) Query-independent
-> compilation canonically lifts normalized singleton-goal evidence, constructs
-> evidence- and schema-derived candidate branches over $T_D(E)$, filters them
-> with the per-branch predicate $\operatorname{Cert}_D$, and jointly selects the
-> feasible core $\mathcal M_D=\mathcal L_D^{[0]}$. (b) For a bound Blocks World
-> query, LTLf2DFA/MONA produces a DFA whose progress guards are certified from
-> their signed obligations $\mathcal O_\chi$ and the selected completion
-> summaries $\{\Sigma_b\mid b\in\mathcal M_D\}$. Certification yields
-> preservation portfolios $\boldsymbol\Pi_\chi$ and serializations
-> $\boldsymbol\ell_\chi$; a singleton order becomes one repair leaf, while a
-> conjunctive order becomes a balanced repair tree. The dispatcher and
-> transition plans form $\mathcal Q_q$, which is appended without relearning
-> $\mathcal M_D$.
-> Supplementary Figure S1 separately illustrates a compositional derivation
-> available in the selected atomic core.
+> Figure 2: The two GP2PL compiler stages. (a) A PDDL domain and normalized
+> singleton-goal evidence yield a certified atomic core. (b) A bound query
+> yields DFA-guided repair and dispatch plans that extend the maintained library
+> without relearning the core.
+
+Supplementary Figure S1 separately illustrates a compositional derivation
+available in the selected atomic core.
 
 ### Supplementary Figure S1: Selected Atomic-Core Compositional Derivation
 

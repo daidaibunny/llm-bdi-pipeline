@@ -110,13 +110,9 @@ Figure 1 artwork placeholder\\[5pt]
 Single-column GP2PL overview\\
 Domain compilation $+$ query-specific compilation}}
 }
-\caption{GP2PL separates reusable domain compilation from query-specific
-compilation. From domain $D$, training instances
-$\mathcal I_{\mathrm{train}}$, and external singleton-goal evidence
-$\mathcal E_{\mathrm{raw}}$, GP2PL compiles one atomic core
-$\mathcal M_D=\mathcal L_D^{[0]}$. Each bound query $\widehat{\tau}_q$ yields
-query-local plans $\mathcal Q_q$, updating the sole maintained library by
-$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
+\caption{GP2PL compiles a PDDL domain, training instances, and singleton-goal
+evidence once into a reusable atomic core; each bound query adds query-local
+plans to the same maintained library.}
 \label{fig:architecture}
 \end{figure}
 
@@ -130,18 +126,10 @@ Figure 2 artwork placeholder\\[8pt]
 (a) Query-independent atomic-core compiler\qquad
 (b) Bound query $\rightarrow$ DFA guard $\rightarrow$ certified repair tree}}
 }
-\caption{Inside the two GP2PL compiler stages. (a) Query-independent compilation
-canonically lifts normalized singleton-goal evidence, constructs evidence- and
-schema-derived candidate branches over $T_D(E)$, filters them with the
-per-branch predicate $\operatorname{Cert}_D$, and jointly selects the core
-$\mathcal M_D=\mathcal L_D^{[0]}$. (b) For a bound Blocks World query,
-LTLf2DFA/MONA produces a DFA whose progress guards are certified from signed
-obligations $\mathcal O_\chi$ and the completion summaries
-$\{\Sigma_b\mid b\in\mathcal M_D\}$. Certification yields preservation
-portfolios $\boldsymbol\Pi_\chi$ and serializations $\boldsymbol\ell_\chi$; a
-singleton order becomes one repair leaf, while a conjunctive order becomes a
-balanced repair tree. The dispatcher and transition plans form $\mathcal Q_q$,
-which is appended without relearning $\mathcal M_D$.}
+\caption{The two GP2PL compiler stages. (a) A PDDL domain and normalized
+singleton-goal evidence yield a certified atomic core. (b) A bound query yields
+DFA-guided repair and dispatch plans that extend the maintained library without
+relearning the core.}
 \label{fig:compiler-stages}
 \end{figure*}
 
