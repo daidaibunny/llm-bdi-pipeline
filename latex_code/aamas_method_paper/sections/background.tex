@@ -3,7 +3,7 @@
 
 \subsection{Planning Domains and Generalized Evidence}
 
-We use typed STRIPS PDDL with a bounded-integer resource fragment as the domain language
+The domain language is typed STRIPS PDDL with a bounded-integer resource fragment
 \cite{FikesNilsson1971STRIPS,McDermott1998PDDL,FoxLong2003PDDL21}. A domain is
 $D=\langle\mathcal{P},\mathcal{F},\mathcal{A},\mathcal{T}\rangle$ with predicate
 schemas, integer-valued resource functions, action schemas, and a type
@@ -20,8 +20,8 @@ generalized-planning task supplies finite training and test instance sets
 sharing $D$. MOOSE applies goal regression
 \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression} to singleton goals
 and lifts the plans into first-order condition-to-macro rules
-\cite{Chen2026Moose}. We treat these rules as evidence: they demonstrate ways
-to achieve observed singleton goals, but need not constitute a closed or
+\cite{Chen2026Moose}. These rules constitute evidence for achieving observed
+singleton goals, but need not constitute a closed or
 compact atomic module core.
 
 \subsection{BDI Plan Libraries in AgentSpeak(L)}
@@ -88,7 +88,8 @@ $\chi$ has normal form
 where the signed transition obligation $\mathcal O_\chi$ separates positive
 achievements from atoms that must remain absent. DFA-derived Boolean alternatives
 are retained as separate conjunctive guard records, while the runtime monitor
-evaluates the complete transition relation. We reserve four related terms.
+evaluates the complete transition relation. The certification vocabulary
+distinguishes four terms.
 An obligation is a condition the compiler must establish. A witness is finite
 evidence for one obligation, such as a symbolic-progression derivation,
 decreasing rank, or resource-discharge path. A certificate is the structured
@@ -133,5 +134,5 @@ nor reoptimizes the atomic core. Throughout, calligraphic symbols denote the
 finite programs, candidate sets, automata, plan sets, and libraries defined
 above; $b$ denotes one candidate branch, $e$ one
 normalized evidence rule, and $\chi$ one DFA transition guard. The Technical
-Supplement, Sec.~1 gives the formal definitions, supported-fragment
+Supplement, Sec.~1 provides the formal definitions, supported-fragment
 assumptions, and the acceptance and rejection boundary used below.

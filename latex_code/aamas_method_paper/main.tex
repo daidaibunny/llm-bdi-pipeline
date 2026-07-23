@@ -59,7 +59,7 @@ introduce
 \methodname{} (Generalized Planning to Plan Libraries). Its typed input
 contract maps controlled natural-language requests to bound
 \ltlf{} query specifications consistent with the planning domain. Its compiler
-turns generalized-planning evidence and
+maps generalized-planning evidence and
 PDDL action models into certified BDI plan libraries. GP2PL validates and lifts
 evidence, generates schema-derived modules for producible goals, selects a
 compact closed atomic core, and appends DFA-guided query controllers without
@@ -87,7 +87,7 @@ Generalized-planning evidence offers a basis for automating this construction.
 Given a planning domain $D$ and training instances
 $\mathcal I_{\mathrm{train}}$, an external generalized-planning backend produces
 raw singleton-goal policy evidence $\mathcal E_{\mathrm{raw}}$. This evidence
-records how individual achievements can be reached under particular conditions,
+encodes procedures for individual achievements under particular conditions,
 but need not provide the callable, context-indexed subsidiary modules or
 composition guarantees required by an executable BDI library.
 

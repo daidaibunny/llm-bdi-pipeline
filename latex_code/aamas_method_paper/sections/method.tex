@@ -15,10 +15,10 @@ portfolio $\boldsymbol\Pi_\chi$ and serialization $\boldsymbol\ell_\chi$ for eac
 DFA progress guard $\chi$; it neither reopens atomic selection nor relearns
 $\mathcal M_D$.
 
-After these obligations pass, rendering preserves each selected trigger,
+After these obligations are certified, rendering preserves each selected trigger,
 context, ordered body, and internal-call edge. The Technical Supplement
 formalizes the constructors and accept/reject boundary, proves the resulting
-soundness and monitor claims, and gives compiler pseudocode (Secs.~1--3).
+soundness and monitor claims, and provides compiler pseudocode (Secs.~1--3).
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
@@ -32,7 +32,7 @@ $E=\operatorname{Lift}_D(E_0)$, whose rules pair a partial state condition and
 one goal atom with a PDDL action macro, numeric effects, and provenance.
 Every symbol and arity must occur in $D$. Lifting capture-avoidingly
 alpha-normalizes provider variables, preserves repeated-variable sharing, and
-keeps constants declared by $D$ fixed, so
+retains constants declared by $D$, so
 \texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. Canonical lifting normalizes a policy
 already generalized by the provider rather than inferring one from ground
 plans. Atomic evidence is restricted to positive singleton achievements;
@@ -74,7 +74,7 @@ on an acyclic reachable graph first unifies compatible open requirements,
 introduces fresh variables only for unbound parameters, and rejects conflicting
 deletes. An alpha-normalized regression state records open requirements,
 producer role, and resource modes; the regression search stops before repeating
-such a state and keeps the shortest body for an equivalent completion summary.
+such a state and retains the shortest body for an equivalent completion summary.
 Candidate generation is therefore finite without an arbitrary action-depth
 constant; validated
 evidence macros are never truncated. Symbolic progression verifies every
@@ -204,7 +204,7 @@ the achievement-query and TEG classes defined in Sec.~\ref{sec:background}.
 Deterministic validation rejects
 undeclared symbols, wrong arities or types, unsupported operators, incomplete
 atom tables, and altered parameter constraints; it neither grounds parameters
-nor selects actions or objects. Query invocation later supplies $\theta_q$. For
+nor selects actions or objects. Query invocation supplies $\theta_q$. For
 evaluation only, a hidden gold formula enables exact finite-trace
 language-equivalence testing; this oracle is not an online input requirement. The
 complete prompt and translation protocol appear in the Technical Supplement,
@@ -215,7 +215,7 @@ unvalidated model output.
 
 Figure~\ref{fig:compiler-stages}(b) follows a bound query through its MONA DFA,
 singleton and conjunctive progress-edge certification, query-local repair
-controllers, and the top-level dispatcher that joins them in $\mathcal Q_q$.
+controllers, and the top-level dispatcher that combines them into $\mathcal Q_q$.
 
 \paragraph{Achievement completion embedding.}
 GP2PL uses the execution formula defined in Sec.~\ref{sec:background}:
@@ -253,8 +253,8 @@ establish $G_i$ under the obligations protected at that occurrence. Portfolios
 are occurrence-specific: two occurrences of the same predicate may admit
 different branches.
 
-A negative guard $\neg N$ is observed absent or discharged by an exact
-certified deleter; it never becomes a synthetic $!\neg N$ goal. A portfolio
+A negative guard $\neg N$ is satisfied by observing $N$ absent or by applying an
+exact certified deleter; it never becomes a synthetic $!\neg N$ goal. A portfolio
 branch is admissible only when its conditional $\mayadd$ excludes $N$. For a
 chosen portfolio tuple, the
 threat-induced precedence graph
@@ -270,7 +270,7 @@ no such joint branch exists.
 
 Numeric obligations reuse the same certification machinery. A positive
 integer equality is achieved by a complete constant-delta action: a unit delta
-requires strict direction and a larger delta the exact predecessor value. A
+requires strict direction, and a larger delta requires the exact predecessor value. A
 mixed Boolean--numeric guard uses complete action-only net effects; for example,
 a body for $\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
 $\mathit{at}(P,L)$ and the exact integer value $3$ in its final state while
@@ -310,10 +310,10 @@ supported-composition boundary.
 
 \paragraph{Atomic branch soundness.}
 \textbf{Proposition 1.} If an emitted $p(\bar X)$ branch's context holds under a
-type-consistent grounding and each called module satisfies the achievement
+type-consistent grounding and called modules satisfy the achievement
 contract and completion summary established by its certification, the branch
 is executable and returns with $p(\bar X)$. Binding grounds each term; induction
-over symbolic progression establishes preconditions and final achievement;
+over symbolic progression establishes preconditions and achievement;
 recursion uses its ranking and preparation rechecks the producer context.
 \hfill$\square$ The proposition establishes local soundness, not
 reachable-state coverage.
