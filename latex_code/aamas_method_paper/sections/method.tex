@@ -188,28 +188,8 @@ trigger--context--body rules, rather than their AgentSpeak rendering, define
 $\mathcal M_D$; the claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
-Figure~\ref{fig:atomic-case} isolates one compositional derivation through
-certified branches in $\mathcal M_D$. Under the displayed binding, branch $b_0$
-expands
-$\texttt{!on(y,z)}$ into $\texttt{!clear(y)}$ followed by a retry without
-changing the PDDL state; $b_1$ clears $y$, and $b_2$ establishes
-$\texttt{on(y,z)}$. Several selected branches may apply in one state, so the
-figure shows an available derivation rather than an executor tie-breaking rule.
-
-\begin{figure}[htbp]
-\centering
-\IfFileExists{\gpplatomiccasepath}{%
-\includegraphics[width=\columnwidth]{\gpplatomiccasepath}%
-}{%
-\fbox{\parbox[c][1.55in][c]{0.92\columnwidth}{\centering
-Atomic-core execution placeholder\\[5pt]
-$\texttt{on(z,y),on(y,x)}$\\
-$\rightarrow\ !\texttt{clear(y)}\rightarrow\ !\texttt{on(y,z)}$}}
-}
-\caption{A derivation through a certified Blocks World atomic-core slice:
-internal subgoal expansion followed by schema-action execution.}
-\label{fig:atomic-case}
-\end{figure}
+A concrete Blocks World derivation through the selected atomic core appears in
+the Technical Supplement, Fig.~S1.
 
 \section{Typed Query Translation and Preservation-Safe Goal Composition}
 \label{sec:temporal-composition}

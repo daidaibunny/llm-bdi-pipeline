@@ -857,9 +857,10 @@ than forcing every result into a chart. Figure 1 is the single-column framework
 overview on the first page. Figure 2 is a full-width, domain-independent view
 inside the two compiler stages; its right panel embeds the concrete DFA-guided
 tower-query construction so that the temporal compiler is not an unexplained
-process box. Figure 3 is a small single-column Blocks World execution case placed
-after feasible-core optimization. It demonstrates how the selected lifted
-atomic core recursively solves an unseen stack configuration.
+process box. Supplementary Figure S1 is a single-column Blocks World execution
+case placed after the formal feasible-core definition. The main paper retains
+one sentence after feasible-core optimization that directs readers to this
+recursive derivation on an unseen stack configuration.
 
 The main paper has no empirical result figure. Exact endpoint comparisons over
 heterogeneous domains are reported in compact `booktabs` tables or concise
@@ -873,7 +874,7 @@ scope-separated external-reference matrix.
 
 ### Figure Production Handoff Contract
 
-Figures 1--3 and the planned supplementary DFA diagram are conceptual. Their
+Main Figures 1--2 and Supplementary Figures S1--S2 are conceptual. Their
 labels and examples below come from the implemented architecture, evidence, and
 domain schemas, not from estimated experimental measurements. Experimental
 numbers enter the manuscript only through deterministic tables generated from
@@ -891,9 +892,8 @@ Canvas, PowerPoint, Python, and export settings:
 - Main Figure 1 uses the approved 2558-by-1256, 330-DPI PNG and is inserted at
   3.25 inches wide (approximately 1.60 inches high). Main Figure 2 uses a
   13.333-by-4.2-inch PowerPoint export canvas and is inserted at 7.0 inches
-  wide. Figure 3 uses the approved 1381-by-778, 330-DPI PNG and is inserted at
-  one column.
-  The supplementary DFA figure uses a 13.333-by-5.333-inch
+  wide. Supplementary Figure S1 uses the approved 1381-by-778, 330-DPI PNG and
+  is inserted at one column. Supplementary Figure S2 uses a 13.333-by-5.333-inch
   PowerPoint canvas. Figure 1 retains its supplied alpha channel and must be
   verified on the paper's white page; generated conceptual figures use a white
   opaque background.
@@ -905,17 +905,18 @@ Canvas, PowerPoint, Python, and export settings:
   three-dimensional effects, icons, decorative illustrations, or screenshots.
 - Main Figure 1 is the approved, version-controlled raster asset
   `fig1_architecture.png`; its SHA-256 identity is enforced by the method-figure
-  generator and tests. Figure 3 is the approved supplied raster asset
-  `fig3_atomic_case.png`. Figure 2 and the supplementary DFA figure may share
+  generator and tests. Supplementary Figure S1 is the approved supplied raster
+  asset `fig3_atomic_case.png`. Figure 2 and Supplementary Figure S2 may share
   the editable source deck `aaai_method_figures_source.pptx`, with exactly one
   figure per slide.
-- Main figure files are `fig1_architecture.png`,
-  `fig2_compiler_stages.pdf`, and `fig3_atomic_case.png`. The supplementary vector file is
-  `figS1_dfa_controller.pdf`; all files live under
+- Main figure files are `fig1_architecture.png` and
+  `fig2_compiler_stages.pdf`. Supplementary figure files are
+  `fig3_atomic_case.png` and the planned `figS2_dfa_controller.pdf`; all live under
   `latex_code/aamas_method_paper/figures/` when delivered.
 - Embed fonts in vector PDFs, crop to the slide boundary, and verify all text at
-  its final include width. Do not rasterize Figure 2 or the supplementary DFA
-  figure, and do not resample or recompress the locked Figures 1 and 3 PNGs.
+  its final include width. Do not rasterize Figure 2 or Supplementary Figure S2,
+  and do not resample or recompress the locked Figure 1 and Supplementary
+  Figure S1 PNGs.
 
 Use this exact color palette. Text is always `#1A1A1A` unless the fill is the
 dark Clingo box, in which case text is white.
@@ -1065,14 +1066,15 @@ Approved caption:
 > conjunctive order becomes a balanced repair tree. The dispatcher and
 > transition plans form $\mathcal Q_q$, which is appended without relearning
 > $\mathcal M_D$.
-> Figure 3 separately illustrates a compositional derivation available in the
-> selected atomic core.
+> Supplementary Figure S1 separately illustrates a compositional derivation
+> available in the selected atomic core.
 
-### Figure 3: Selected Atomic-Core Compositional Derivation
+### Supplementary Figure S1: Selected Atomic-Core Compositional Derivation
 
-Place this single-column figure after Feasible-Core Optimization and immediately
-before query-specific translation and composition. It demonstrates the result
-of Figure 2(a), rather than repeating candidate construction:
+Place this single-column figure after the formal feasible-core definition in the
+Technical Supplement. The main paper retains only a one-sentence pointer after
+Feasible-Core Optimization. The figure demonstrates the result of Figure 2(a),
+rather than repeating candidate construction:
 
 - Show the three-block state `on(z,y), on(y,x), clear(z), arm_empty` and the
   invocation `!on(y,z)`.
@@ -1090,13 +1092,13 @@ of Figure 2(a), rather than repeating candidate construction:
 
 Approved caption:
 
-> Figure 3: One certified compositional derivation from a selected Blocks World
+> Figure S1: One certified compositional derivation from a selected Blocks World
 > atomic-core slice. The first transition expands an internal achievement
 > without changing the PDDL state; subsequent transitions execute schema
 > actions. Disequality guards inactive under the shown binding are omitted. The
 > figure demonstrates derivation availability, not runtime branch priority.
 
-### Supplementary Figure S1: DFA Transition Compilation and Runtime Monitoring
+### Supplementary Figure S2: DFA Transition Compilation and Runtime Monitoring
 
 Place this full-width figure in the technical supplement beside the formal
 transition-compilation rules. Use four panels. The decoded MONA example is
@@ -1198,7 +1200,7 @@ All helper names in panel (c) omit the common prefix
 `g_query_17_trans_1_` only to remain legible; print this note in gray 18 pt at
 `x=65,y=95,w=10,h=3`, to the right of the singleton inset. Draft caption:
 
-> **Supplementary Figure S1: Preservation-safe compilation of one DFA progress
+> **Supplementary Figure S2: Preservation-safe compilation of one DFA progress
 > transition.**
 > Conditional module-completion summaries induce a threat-induced precedence
 > relation over signed guard obligations. A balanced binary transition-repair
@@ -1308,8 +1310,9 @@ are delivered, assemble the
 multi-asset `aaai_figure_manifest.json` only after recording their dimensions,
 data sources, and embedded fonts. Any font substitution is a release blocker.
 
-Use these LaTeX placements and labels. Figures 2--3 retain visible placeholders
-until their colleague-produced vector PDFs are delivered:
+Use the first two LaTeX placements in the main paper and the atomic-case
+placement in the Technical Supplement. The supplement prefixes figure numbers
+with `S`:
 
 ```latex
 \begin{figure}[htbp]
@@ -1335,7 +1338,7 @@ until their colleague-produced vector PDFs are delivered:
   \IfFileExists{\gpplatomiccasepath}{
     \includegraphics[width=\columnwidth]{\gpplatomiccasepath}
   }{<single-column placeholder>}
-  \caption{<approved Figure 3 caption from this outline>}
+  \caption{<approved Supplementary Figure S1 caption from this outline>}
   \label{fig:atomic-case}
 \end{figure}
 ```
@@ -1551,7 +1554,7 @@ than as runner bookkeeping.
 - Use a colorblind-safe palette and redundant shape/line encodings. Figure text
   and mathematical symbols must remain readable in grayscale; never convey a
   certification or failure state by color alone.
-- Conceptual Figures 2--3 and Supplementary Figure S1 may be authored in
+- Conceptual Figure 2 and Supplementary Figures S1--S2 may be authored in
   PowerPoint and exported as vector PDF. Any optional diagnostic plot must be
   regenerated by its checked-in script from frozen records and must not be
   promoted to a main-paper result figure.

@@ -472,6 +472,32 @@ query-independent, closed under its internal achievement calls, and contains
 no query identifier, DFA state, or monitor symbol. The evaluated AgentSpeak(L)
 realization preserves these rules but does not define the core.
 
+Figure~\ref{fig:atomic-case} isolates one compositional derivation through
+certified branches in $\mathcal M_D$. Under the displayed binding, branch $b_0$
+expands $\texttt{!on(y,z)}$ into $\texttt{!clear(y)}$ followed by a retry without
+changing the PDDL state; $b_1$ clears $y$, and $b_2$ establishes
+$\texttt{on(y,z)}$. Several selected branches may apply in one state, so the
+figure shows an available derivation rather than an executor tie-breaking rule.
+
+\begin{figure}[htbp]
+\centering
+\IfFileExists{\gpplatomiccasepath}{%
+\includegraphics[width=\columnwidth]{\gpplatomiccasepath}%
+}{%
+\fbox{\parbox[c][1.55in][c]{0.92\columnwidth}{\centering
+Atomic-core execution placeholder\\[5pt]
+$\texttt{on(z,y),on(y,x)}$\\
+$\rightarrow\ !\texttt{clear(y)}\rightarrow\ !\texttt{on(y,z)}$}}
+}
+\caption{One certified compositional derivation from a selected Blocks World
+atomic-core slice. The first transition expands an internal achievement without
+changing the PDDL state; subsequent transitions execute schema actions.
+Disequality guards inactive under the shown binding are omitted. The figure
+demonstrates derivation availability, not runtime branch priority.}
+\label{fig:atomic-case}
+\end{figure}
+\FloatBarrier
+
 \begin{definition}[Maintained domain library]
 For bound query $q$, let $\mathcal Q_q$ contain its top-level goal, DFA
 dispatcher, and certified transition-repair plans. For an ordered sequence of
