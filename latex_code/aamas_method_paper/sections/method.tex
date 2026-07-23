@@ -17,8 +17,8 @@ $\mathcal M_D$.
 
 After these obligations are certified, rendering preserves each selected trigger,
 context, ordered body, and internal-call edge. The Technical Supplement
-formalizes the constructors and accept/reject boundary, proves the resulting
-soundness and monitor claims, and provides compiler pseudocode (Secs.~1--3).
+formalizes the constructors and accept/reject boundary, proves the
+soundness and monitor claims, and provides pseudocode (Secs.~1--3).
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
@@ -75,12 +75,12 @@ introduces fresh variables only for unbound parameters, and rejects conflicting
 deletes. An alpha-normalized regression state records open requirements,
 producer role, and resource modes; the regression search stops before repeating
 such a state and retains the shortest body for an equivalent completion summary.
-Candidate generation is therefore finite without an arbitrary action-depth
+Candidate generation is finite without an arbitrary action-depth
 constant; validated
 evidence macros are never truncated. Symbolic progression verifies every
 candidate, while cyclic dependencies require provider evidence or a separately
 certified recursive module. Let $\mathcal C_E$ be the validated evidence
-branches. The resulting candidate set
+branches. The candidate set
 $\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$ is finite, but
 $\mathfrak G$ is not a complete hypothesis language for PDDL planning. Types
 constrain unification; rendered sort-membership tests occur only in plan contexts.
@@ -151,7 +151,7 @@ ranking witness.
 \subsection{Feasible-Core Optimization}
 
 Validated evidence macros and certified action-schema-derived candidates enter
-one answer-set optimization problem solved with Clingo
+one Clingo answer-set optimization problem
 \cite{Gebser2018Clingo}. Evidence rules induce coverage obligations
 $\operatorname{covers}_D(b,e)$. Coverage requires alpha-equivalent triggers
 and either an equivalent body and summary, the same body under a weaker
@@ -315,7 +315,7 @@ contract and completion summary established by its certification, the branch
 is executable and returns with $p(\bar X)$. Binding grounds each term; induction
 over symbolic progression establishes preconditions and achievement;
 recursion uses its ranking and preparation rechecks the producer context.
-\hfill$\square$ The proposition establishes local soundness, not
+\hfill$\square$ This establishes local soundness, not
 reachable-state coverage.
 
 \paragraph{Certified-candidate-set optimality.}
