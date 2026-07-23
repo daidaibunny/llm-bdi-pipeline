@@ -135,17 +135,18 @@ relearning the core.}
 \label{fig:compiler-stages}
 \end{figure*}
 
-GP2PL uses certificate-based compilation to connect language-to-logic
-translation, generalized policies, answer-set optimization, AgentSpeak
-semantics, and \ltlf{} automata and produce one maintained library. It makes
-four contributions: an evidence-to-library compiler
-that adds modules for producible targets omitted from the evidence and selects a
-compact, internally closed atomic core; machine-checkable conditions for module
-executability, termination, and composability; a typed input contract mapping
-controlled natural-language requests to bound
-achievement and TEG specifications, evaluated by exact finite-trace language
-equivalence on a TEG benchmark; and query-specific
-temporal controllers that reuse and extend one maintained BDI library.
+GP2PL connects language-to-logic translation, generalized policies, answer-set
+optimization, AgentSpeak semantics, and \ltlf{} automata to produce one
+maintained library. Its four contributions are: a policy-lifting compiler
+that expands singleton-goal evidence over the domain-wide producible target
+universe and selects a compact, internally closed atomic core; a certificate
+system for schema executability and achievement, recursive
+progress, target-preserving resource discharge, and preservation-safe temporal
+composition; a typed translation contract mapping controlled language to
+bound achievement and TEG specifications, evaluated by exact finite-trace
+language equivalence on a TEG benchmark; and a DFA-guided query compiler
+that appends query-local controllers to the maintained BDI library without
+relearning the core.
 
 \input{sections/background}
 \input{sections/related_work}
