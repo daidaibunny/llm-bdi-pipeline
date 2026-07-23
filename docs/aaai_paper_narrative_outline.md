@@ -357,7 +357,7 @@ certificate-carrying compiler that derives summaries from generalized-planning
 evidence and PDDL schemas, constructs executable domain modules, and composes
 query-local controllers.
 
-### 4. Certified Policy Lifting into a Reusable Atomic Core
+### 4. Certified Atomic Core Compilation
 
 Open with the two certification boundaries, then present the query-independent
 post-evidence domain compiler. Its candidate and witness representation is
@@ -409,7 +409,7 @@ understand a contribution. Long proof steps and secondary implementation cases
 belong in supplementary material so that final results fit the seven-page AAAI
 technical-content limit.
 
-### 5. Typed Query Translation and Preservation-Safe Goal Composition
+### 5. Certified Query Compilation
 
 This section covers the query-specific path from a controlled-language request
 to plans `Q_q` over the selected atomic core `M_D`. First define the frozen
@@ -1022,8 +1022,8 @@ Panel (b) embeds the bound Blocks World tower query that previously occupied a
 separate temporal-composition figure. It must retain a clear left-to-right
 compiler spine rather than becoming a standalone automaton diagram.
 Do not use the Introduction to narrate the implementation shown here. Cite
-panel (a) from Evidence Normalization and Canonical Lifting and panel (b) from
-Typed Query Translation and Preservation-Safe Goal Composition.
+panel (a) from Evidence Normalization and Lifting and panel (b) from
+Certified Query Compilation.
 
 - Panel (a), `Certified atomic-core compilation`, shows domain $D$ and normalized
   singleton-goal evidence $E_0$, canonical lifting to $E$, candidate generation
