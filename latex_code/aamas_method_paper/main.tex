@@ -111,10 +111,9 @@ Single-column GP2PL overview\\
 Domain compilation $+$ query-specific compilation}}
 }
 \caption{GP2PL separates reusable domain compilation from query-specific
-temporal compilation. A PDDL domain, training instances, and singleton-goal
-evidence are compiled once into the atomic core $\mathcal M_D$; each bound query
-contributes query-local plans $\mathcal Q_q$ to the sole maintained library
-$\mathcal L_D^{[k]}$, without relearning the core.}
+temporal compilation. A domain model, training instances, and singleton-goal
+evidence are compiled once into a reusable atomic core; each bound query adds
+query-local plans to the sole maintained library without relearning the core.}
 \label{fig:architecture}
 \end{figure}
 
