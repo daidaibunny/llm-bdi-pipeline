@@ -134,10 +134,10 @@ Figure 2 artwork placeholder\\[8pt]
 \caption{Inside the two GP2PL compiler stages. (a) Query-independent compilation
 canonically lifts normalized singleton-goal evidence, constructs evidence- and
 schema-derived candidate branches over $T_D(E)$, filters them with the
-per-branch predicate $\operatorname{Cert}_D$, and jointly selects the feasible
-core $\mathcal M_D=\mathcal L_D^{[0]}$. (b) For a bound Blocks World query,
-LTLf2DFA/MONA produces a DFA whose progress guards are certified from their
-signed obligations $\mathcal O_\chi$ and the selected completion summaries
+per-branch predicate $\operatorname{Cert}_D$, and jointly selects the core
+$\mathcal M_D=\mathcal L_D^{[0]}$. (b) For a bound Blocks World query,
+LTLf2DFA/MONA produces a DFA whose progress guards are certified from signed
+obligations $\mathcal O_\chi$ and the completion summaries
 $\{\Sigma_b\mid b\in\mathcal M_D\}$. Certification yields preservation
 portfolios $\boldsymbol\Pi_\chi$ and serializations $\boldsymbol\ell_\chi$; a
 singleton order becomes one repair leaf, while a conjunctive order becomes a
