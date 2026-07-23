@@ -56,6 +56,12 @@ by an unrelated constant. It is a representation-level canonicalization of
 first-order evidence, not an inference procedure from ground plans.
 \end{definition}
 
+For example, if neither $\mathit{block0}$ nor $\mathit{block1}$ is a constant
+declared by $D$, canonical lifting gives
+\[
+\mathit{on}(\mathit{block0},\mathit{block1})\mapsto\mathit{on}(X,Y).
+\]
+
 MOOSE readable policies \cite{Chen2026Moose} are the evaluated evidence
 instantiation. For example,
 a readable rule may associate the singleton goal $on(X,Y)$ with context
@@ -404,7 +410,9 @@ producer--precondition dependencies, certified relational recursion, and finite
 causal resource-mode discharge. The regression construction builds on
 goal-regression planning \cite{Fikes1972GeneralizedRobotPlans,Chen2026Moose}.
 A regression state is an alpha-normalized tuple
-of open requirements, the selected producer role, and resource modes. A path
+of open requirements, the selected producer role, and resource modes. Each step
+unifies compatible open requirements, introduces a fresh variable only for an
+action parameter not yet bound, and rejects conflicting delete effects. It
 stops before repeating such a state. Equivalent states retain only their
 shortest body for the same completion summary. This establishes finiteness
 without an arbitrary action-depth constant. Provider macros are validated but
@@ -555,7 +563,10 @@ $g\rightarrow h$.
 
 \begin{assumption}[Target-preserving resource discharge]
 A reusable-resource sequence is accepted only when effect unification identifies
-a stable capacity key. Its abstract resource-mode graph is
+a stable capacity key. For example, an acquisition may delete
+$\mathit{free}(R)$ and add $\mathit{held}(R,U)$; these names are illustrative,
+and the compiler identifies the roles from the paired effect structure. Its
+abstract resource-mode graph is
 $\mathcal G_b^{\mathrm{res}}=(V_b^{\mathrm{res}},E_b^{\mathrm{res}})$, where a
 vertex is an alpha-normalized keyed occupancy mode and a labelled edge
 $(u,a,v)\in E_b^{\mathrm{res}}$ denotes a symbolically executable action-schema
@@ -1050,6 +1061,11 @@ numeric equality is observation-only unless a complete action proves a change
 away from the forbidden value. These restrictions reduce numeric reasoning to
 the same completion and preservation obligations as predicates; they do not
 claim arbitrary numeric planning.
+
+For example, a body for
+$\mathit{at}(P,L)\land\mathit{fuel}(V)=3$ must establish both the Boolean atom
+and exact integer value in its final state while preserving every other signed
+obligation.
 
 For numeric preparation, the ranking witness is
 $\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,

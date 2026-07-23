@@ -30,12 +30,11 @@ policy representation $\mathcal E_{\mathrm{raw}}$ parses to an evidence program 
 Canonical lifting produces
 $E=\operatorname{Lift}_D(E_0)$, whose rules pair a partial state condition and
 one goal atom with a PDDL action macro, numeric effects, and provenance.
-Every symbol and arity must occur in $D$. Lifting capture-avoidingly
-alpha-normalizes provider variables, preserves repeated-variable sharing, and
-retains constants declared by $D$, so
-\texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. Canonical lifting normalizes a policy
+Every symbol and arity must occur in $D$. Canonical lifting normalizes a policy
 already generalized by the provider rather than inferring one from ground
-plans. Atomic evidence is restricted to positive singleton achievements;
+plans; the Technical Supplement, Sec.~1, specifies capture-avoiding renaming,
+repeated-variable sharing, and constant preservation. Atomic evidence is
+restricted to positive singleton achievements;
 negative literals remain guard conditions and do not induce synthetic atomic
 goals.
 
@@ -70,13 +69,10 @@ $\mathcal G_D^{\mathrm{prod}}(T)$ has an edge $p\rightarrow r$ when a producer
 for $p$ has a positive dynamic precondition with predicate $r$.
 Backward STRIPS regression
 \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression,Chen2026Moose}
-on an acyclic reachable graph first unifies compatible open requirements,
-introduces fresh variables only for unbound parameters, and rejects conflicting
-deletes. An alpha-normalized regression state records open requirements,
-producer role, and resource modes; the regression search stops before repeating
-such a state and retains the shortest body for an equivalent completion summary.
-Candidate generation is finite without an arbitrary action-depth
-constant; validated
+over an acyclic reachable graph rejects conflicting deletes, stops
+before an alpha-normalized regression state repeats, and retains the shortest
+body for each equivalent completion summary. Candidate generation is finite
+without an arbitrary action-depth constant; validated
 evidence macros are never truncated. Symbolic progression verifies every
 candidate, while cyclic dependencies require provider evidence or a separately
 certified recursive module. Let $\mathcal C_E$ be the validated evidence
@@ -115,31 +111,24 @@ global relation count or an anchor-local count
 $\rho_{R,x}(s)=|\{y\mid R(y,x)\in s\}|$ that strictly decreases under a
 reachable-state acyclicity assumption, together with an
 already-satisfied, direct-producer, or validated-evidence terminal branch.
-Acyclicity prevents recursive calls from returning to an earlier anchor.
-Relation threats are checked over the preparation graph selected by Clingo: a branch may
-add the ranked relation at another anchor only under a guard proving that the
-new anchor differs from the protected one. The ranking is a compile-time
-witness, not an agent belief; its guarantee applies only to generated,
-schema-certified features. This ranking construction follows relational progress
-witnesses in
+Relation threats are checked over the preparation graph selected by Clingo: a
+branch may add the ranked relation at another anchor only under a guard proving
+that the new anchor differs from the protected one. The compile-time witness
+applies only to generated, schema-certified features and follows relational
+progress witnesses in
 general-policy work \cite{Frances2021LearningGeneralPolicies}.
 
 \paragraph{Target-preserving resource discharge.}
-Temporary occupation of a reusable resource is identified from action effects:
-when an acquisition action deletes an availability fact
-$\mathit{free}(R)$ and adds an occupancy relation $\mathit{held}(R,U)$ (names
-illustrative), the compiler infers the resource and occupant arguments from the
-effect structure and forms a finite graph of alpha-normalized keyed occupancy
-modes. A discharge body is accepted only if symbolic execution removes the
-current occupancy mode, restores the availability fact, leaves the atomic
-target true, and does not recreate an earlier normalized mode; excluding
-repeated modes makes the search finite without assuming that release is one
-action.
+Temporary resource occupation is inferred from paired availability and
+occupancy effects. The compiler forms a finite graph of alpha-normalized keyed
+occupancy modes. A discharge body is accepted only if symbolic execution
+removes the current mode, restores availability, leaves the atomic target true,
+and does not recreate an earlier normalized mode. Excluding repeated modes
+makes the search finite without assuming a one-action release.
 
 \paragraph{Ranked cross-module precondition repair.}
-Preparing one of several dynamic preconditions may temporarily change another,
-such as an object's location. A repair branch may defer repair of an unrelated
-sibling precondition
+Preparing one dynamic precondition may temporarily change another. A repair
+branch may defer an unrelated sibling precondition
 only through a schema-inferred single-valued fluent when every deferred sibling
 has a unique producer, all static feasibility witnesses remain valid, and each deferred
 precondition is restored before the original target is retried. For a candidate core
@@ -153,14 +142,10 @@ ranking witness.
 Validated evidence macros and certified action-schema-derived candidates enter
 one Clingo answer-set optimization problem
 \cite{Gebser2018Clingo}. Evidence rules induce coverage obligations
-$\operatorname{covers}_D(b,e)$. Coverage requires alpha-equivalent triggers
-and either an equivalent body and summary, the same body under a weaker
-context, or a producer refinement with the same $\mustadd$, no
-additional $\maydelete$, and equivalent numeric and keyed-resource summaries.
-For each nonrecursive schema branch, $\operatorname{realizes}_D(b,c)$ permits
-an equivalent branch, a refinement with no weaker completion contract, or a
-target-preserving resource-discharge alternative with the same achievement
-contract. Body-prefix similarity alone satisfies neither relation.
+$\operatorname{covers}_D(b,e)$, and nonrecursive schema branches induce
+$\operatorname{realizes}_D(b,c)$. Both require alpha-equivalent triggers and an
+equivalent or no-weaker completion contract; the Technical Supplement, Sec.~1,
+defines their admissible alternatives.
 Define
 \begin{align*}
 \mathcal C^{\checkmark}_{D,E}
@@ -198,29 +183,20 @@ the Technical Supplement, Fig.~S1.
 
 A frozen language-model prompt receives one controlled natural-language request,
 its declared typed parameters and constraints, and the public PDDL catalogue. The
-language model returns a fixed eight-key JSON object containing an unbound parametric \ltlf{}
-query formula and a one-to-one proposition table. The result is interpreted under
+language model returns an unbound parametric \ltlf{} query formula and a
+one-to-one proposition table. The result is interpreted under
 the achievement-query and TEG classes defined in Sec.~\ref{sec:background}.
 Deterministic validation rejects
 undeclared symbols, wrong arities or types, unsupported operators, incomplete
 atom tables, and altered parameter constraints; it neither grounds parameters
 nor selects actions or objects. Query invocation supplies $\theta_q$. For
-evaluation only, a hidden gold formula enables exact finite-trace
-language-equivalence testing; this oracle is not an online input requirement. The
-complete prompt and translation protocol appear in the Technical Supplement,
-Sec.~4.
-Figure~\ref{fig:compiler-stages}(b) abbreviates this upstream translation at
-the DFA input; LTLf2DFA consumes the validated execution formula, not
-unvalidated model output.
-
-Figure~\ref{fig:compiler-stages}(b) follows a bound query through its MONA DFA,
-singleton and conjunctive progress-edge certification, query-local repair
-controllers, and the top-level dispatcher that combines them into $\mathcal Q_q$.
-
-\paragraph{Achievement completion embedding.}
-GP2PL uses the execution formula defined in Sec.~\ref{sec:background}:
-$F\varphi_q$ for achievement queries and $\varphi_q$ otherwise. Both classes
-share DFA construction, progress-edge certification, runtime monitoring, and
+offline evaluation, a hidden gold formula enables exact finite-trace language
+equivalence; it is not an online input. The complete prompt and structured output
+contract appear in the Technical Supplement, Sec.~4. Figure~\ref{fig:compiler-stages}(b)
+follows the validated execution formula through its MONA DFA, progress-edge
+certification, query-local repair controllers, and top-level dispatcher to
+$\mathcal Q_q$. GP2PL uses $F\varphi_q$ for achievement queries and $\varphi_q$
+for TEGs. Both classes share DFA construction, certification, monitoring, and
 transition repair; no separate achievement path is introduced.
 
 \paragraph{Progress-edge compilation.}
@@ -230,9 +206,7 @@ for each progress source--target pair $(q_s,q_t)$, grouping its conjunctive guar
 records only when they share a certified common signed repair objective. Thus
 DFA-derived alternatives are supported, whereas arbitrary disjunctive achievement
 choice lies outside $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. An accepting
-\texttt{true} self-loop requires no controller. The external
-binding $\theta_q$ instantiates query propositions while the shared atomic core
-$\mathcal M_D$ remains lifted. For signed obligation
+\texttt{true} self-loop requires no controller. For signed obligation
 $\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle$, compilation derives a
 serialization $\boldsymbol\ell_\chi$ and occurrence-specific preservation
 portfolios $\boldsymbol\Pi_\chi$ from the selected completion summaries. The
@@ -271,10 +245,9 @@ no such joint branch exists.
 Numeric obligations reuse the same certification machinery. A positive
 integer equality is achieved by a complete constant-delta action: a unit delta
 requires strict direction, and a larger delta requires the exact predecessor value. A
-mixed Boolean--numeric guard uses complete action-only net effects; for example,
-a body for $\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
-$\mathit{at}(P,L)$ and the exact integer value $3$ in its final state while
-preserving every other signed obligation. Negated equality is observation-only
+mixed Boolean--numeric guard requires complete action-only net effects that
+establish its Boolean atoms and exact integer values while preserving every
+other signed obligation. Negated equality is observation-only
 without a certified change-away action. Numeric preparation uses
 $\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,
 ordering missing preconditions before bounded target distance. Strong-Until
