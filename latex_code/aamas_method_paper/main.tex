@@ -128,8 +128,7 @@ Figure 2 artwork placeholder\\[8pt]
 }
 \caption{The two GP2PL compiler stages. (a) A domain and normalized
 singleton-goal evidence yield a certified atomic core. (b) A bound query yields
-DFA-guided repair and dispatch plans that extend the maintained library without
-relearning the core.}
+DFA-guided repair and dispatch plans that extend the maintained library.}
 \label{fig:compiler-stages}
 \end{figure*}
 
@@ -162,9 +161,8 @@ extended goals without relearning the core.
 Future work should study unrestricted PDDL--\ltlf{} strategy synthesis, richer
 PDDL models with numeric, conditional, and durative effects, and scalable
 certificate discovery for larger candidate spaces.
-For a new domain supplied without instances, parameterized PDDL problem
-generators can synthesize a reproducible training curriculum for evidence
-learning \cite{Bacchus2001AIPS00}.
+When a new domain lacks instances, parameterized PDDL generators can supply
+reproducible training data for evidence learning \cite{Bacchus2001AIPS00}.
 
 \ifgpplpublicrelease
 \paragraph{Code and data availability.}

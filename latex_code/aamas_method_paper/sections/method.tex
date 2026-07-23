@@ -32,8 +32,8 @@ $E=\operatorname{Lift}_D(E_0)$, whose rules pair a partial state condition and
 one goal atom with a PDDL action macro, numeric effects, and provenance.
 Every symbol and arity must occur in $D$. Canonical lifting normalizes a policy
 already generalized by the provider rather than inferring one from ground
-plans; the Technical Supplement, Sec.~1, specifies capture-avoiding renaming,
-repeated-variable sharing, and constant preservation. Atomic evidence is
+plans; it consistently renames variables while preserving shared-variable
+structure and declared constants (Technical Supplement, Sec.~1). Atomic evidence is
 restricted to positive singleton achievements;
 negative literals remain guard conditions and do not induce synthetic atomic
 goals.
