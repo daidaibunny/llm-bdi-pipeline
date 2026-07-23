@@ -1319,7 +1319,7 @@ def render_atomic_table(result: Mapping[str, Any]) -> str:
 		(
 			"\\bottomrule",
 			"\\end{tabular}",
-			"\\caption{Paired atomic compiler comparison over 6,140 held-out seed--cases.",
+			"\\caption{Paired atomic compiler ablation over 6,140 held-out seed--cases.",
 			"All entries are mean $\\pm$ sample SD across five evidence seeds; Branches and",
 			"KiB are per-seed totals over 16 libraries. Bold marks tied best coverage and",
 			"the smaller selected core;",
@@ -1404,7 +1404,7 @@ def render_temporal_table(result: Mapping[str, Any]) -> str:
 		(
 			"\\bottomrule",
 			"\\end{tabular}",
-			"\\caption{Paired temporal compiler comparison over 1,228 queries. PAR-2 charges",
+			"\\caption{Paired temporal compiler ablation over 1,228 queries. PAR-2 charges",
 			"failures twice the 1,800-second limit. Plans is median controller size and",
 			"Fan-out is the maximum number of sibling plans sharing one repair trigger.",
 			"Bold marks best coverage and the selected structural bound; $\\dagger$ marks",
