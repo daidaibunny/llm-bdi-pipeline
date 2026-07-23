@@ -40,9 +40,9 @@ goals.
 
 \subsection{Action-Schema Candidate Generation}
 
-Evidence need not cover the signatures required by internal calls. Candidate
-generation therefore expands from evidence goals to schema-producible targets,
-independently of which goals the provider observed.
+Candidate generation extends evidence goals to every schema-producible target,
+including signatures required by internal calls but absent from provider
+evidence.
 Let $\operatorname{goalPred}(E)$ contain the predicate symbols targeted by
 positive predicate evidence and $\operatorname{prod}(D)$ the predicates
 occurring in some action's add effects; the domain-wide producible target
