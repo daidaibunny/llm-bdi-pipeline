@@ -1,0 +1,627 @@
+{
+  "domain_name": "numeric-ferry",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "at(X, Y)"
+      ],
+      "plan_name": "at_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "at-ferry(X)"
+      ],
+      "plan_name": "at-ferry_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at-ferry"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "on(X)"
+      ],
+      "plan_name": "on_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "at-ferry(Y)",
+        "on(X)"
+      ],
+      "plan_name": "at_via_debark",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "not at-ferry(Y)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y \\== Z",
+        "at-ferry(Z)",
+        "ferry-capacity(N)",
+        "N >= 1"
+      ],
+      "plan_name": "at_via_board_then_sail_then_debark",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "on(X)",
+        "not at-ferry(Y)",
+        "at-ferry(Z)",
+        "obj_tp(Z, location)",
+        "Y \\== Z",
+        "ferry-capacity(N)",
+        "N >= 1"
+      ],
+      "plan_name": "at_via_debark_then_board_then_sail_then_debark",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "not at-ferry(Y)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y \\== Z",
+        "not at-ferry(Z)",
+        "at-ferry(A)",
+        "obj_tp(A, location)",
+        "A \\== Y",
+        "A \\== Z",
+        "ferry-capacity(N)",
+        "N >= 1"
+      ],
+      "plan_name": "at_via_sail_then_board_then_sail_then_debark",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "on(X)",
+        "at-ferry(Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "ferry-capacity(N)",
+        "N >= 0"
+      ],
+      "plan_name": "moose_reduced_numeric_ferry_rule_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "at-ferry(Z)",
+        "ferry-capacity(N)",
+        "N >= 1"
+      ],
+      "plan_name": "moose_reduced_numeric_ferry_rule_3",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "at-ferry(Y)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "ferry-capacity(N)",
+        "N >= 1"
+      ],
+      "plan_name": "moose_reduced_numeric_ferry_rule_4",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "debark"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "at(X, A)",
+        "obj_tp(A, location)",
+        "A != Y",
+        "at-ferry(Z)",
+        "obj_tp(Z, location)",
+        "A != Z",
+        "Y != Z",
+        "ferry-capacity(N)",
+        "N >= 1"
+      ],
+      "plan_name": "moose_reduced_numeric_ferry_rule_5",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sail"
+        }
+      ],
+      "context": [
+        "obj_tp(X, location)",
+        "not at-ferry(X)",
+        "at-ferry(Y)",
+        "obj_tp(Y, location)",
+        "X \\== Y"
+      ],
+      "plan_name": "at-ferry_via_sail",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at-ferry"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "at(X, Y)",
+        "obj_tp(Y, location)",
+        "at-ferry(Y)",
+        "ferry-capacity(N)",
+        "N >= 1"
+      ],
+      "plan_name": "on_via_board",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "not on(X)"
+      ],
+      "plan_name": "at_prepare_on_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-ferry"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "not at-ferry(Y)"
+      ],
+      "plan_name": "at_prepare_at-ferry_Y",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-ferry"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "obj_tp(Y, location)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "not at-ferry(Z)"
+      ],
+      "plan_name": "at_prepare_at-ferry_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-ferry"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "obj_tp(X, car)",
+        "at(X, Y)",
+        "obj_tp(Y, location)",
+        "not at-ferry(Y)"
+      ],
+      "plan_name": "on_prepare_at-ferry_Y",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    }
+  ]
+}

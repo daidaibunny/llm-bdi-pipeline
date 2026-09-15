@@ -1,0 +1,1057 @@
+{
+  "domain_name": "blocksworld-clear",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "arm-empty"
+      ],
+      "plan_name": "arm-empty_already_true",
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "arm-empty"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "clear(X)"
+      ],
+      "plan_name": "clear_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "holding_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "on(X, Y)"
+      ],
+      "plan_name": "on_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "on-table(X)"
+      ],
+      "plan_name": "on-table_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "arm-empty_via_putdown",
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "arm-empty"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(Y, X)",
+        "clear(Y)"
+      ],
+      "plan_name": "clear_via_unstack_then_putdown",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "clear_via_putdown",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(Y, X)",
+        "clear(Y)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_clear_rule_1",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "on(Z, X)",
+        "clear(Z)",
+        "holding(Y)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_clear_rule_2",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(Z, X)",
+        "on(Y, Z)",
+        "Y != Z",
+        "clear(Y)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_clear_rule_3",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "on(A, X)",
+        "on(Z, A)",
+        "A != Z",
+        "clear(Z)",
+        "holding(Y)",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_clear_rule_4",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(A, X)",
+        "on(Z, A)",
+        "A != Z",
+        "on(Y, Z)",
+        "A != Y",
+        "Y != Z",
+        "clear(Y)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_clear_rule_5",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "on(B, X)",
+        "on(A, B)",
+        "A != B",
+        "on(Z, A)",
+        "A != Z",
+        "B != Z",
+        "clear(Z)",
+        "holding(Y)",
+        "A != Y",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_clear_rule_6",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(B, X)",
+        "on(A, B)",
+        "A != B",
+        "on(Z, A)",
+        "A != Z",
+        "B != Z",
+        "on(Y, Z)",
+        "A != Y",
+        "B != Y",
+        "Y != Z",
+        "clear(Y)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_clear_rule_7",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "holding_via_pickup",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "arm-empty",
+        "on(X, Y)"
+      ],
+      "plan_name": "holding_via_unstack",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Y)",
+        "holding(X)"
+      ],
+      "plan_name": "on_via_stack",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X \\== Y",
+        "clear(X)",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "on_via_pickup_then_stack",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X \\== Y",
+        "clear(X)",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, Z)",
+        "Y \\== Z"
+      ],
+      "plan_name": "on_via_unstack_then_stack",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "on-table_via_putdown",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "arm-empty",
+        "on(X, Y)"
+      ],
+      "plan_name": "on-table_via_unstack_then_putdown",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "clear_prepare_arm-empty_",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        }
+      ],
+      "context": [
+        "on(Y, X)",
+        "not clear(Y)"
+      ],
+      "plan_name": "clear_prepare_clear_Y",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "holding_prepare_arm-empty_",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "holding_prepare_clear_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "on_prepare_arm-empty_",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "on_prepare_clear_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(Y)"
+      ],
+      "plan_name": "on_prepare_clear_Y",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not holding(X)"
+      ],
+      "plan_name": "on_prepare_holding_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not on-table(X)"
+      ],
+      "plan_name": "on_prepare_on-table_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "on-table_prepare_arm-empty_",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "on-table_prepare_clear_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not holding(X)"
+      ],
+      "plan_name": "on-table_prepare_holding_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    }
+  ]
+}

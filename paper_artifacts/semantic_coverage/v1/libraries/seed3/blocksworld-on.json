@@ -1,0 +1,4317 @@
+{
+  "domain_name": "blocksworld-on",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "arm-empty"
+      ],
+      "plan_name": "arm-empty_already_true",
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "arm-empty"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "clear(X)"
+      ],
+      "plan_name": "clear_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "holding_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "on(X, Y)"
+      ],
+      "plan_name": "on_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "on-table(X)"
+      ],
+      "plan_name": "on-table_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "arm-empty_via_putdown",
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "arm-empty"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(Y, X)",
+        "clear(Y)"
+      ],
+      "plan_name": "clear_via_unstack_then_putdown",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "clear_via_putdown",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(Y, X)",
+        "X \\== Y",
+        "clear(Y)"
+      ],
+      "plan_name": "clear_via_unstack",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "holding_via_pickup",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "arm-empty",
+        "on(X, Y)"
+      ],
+      "plan_name": "holding_via_unstack",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Y)",
+        "holding(X)"
+      ],
+      "plan_name": "on_via_stack",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X \\== Y",
+        "clear(X)",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "on_via_pickup_then_stack",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X \\== Y",
+        "clear(X)",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, Z)",
+        "Y \\== Z"
+      ],
+      "plan_name": "on_via_unstack_then_stack",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_3",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "holding(Y)",
+        "on(X, Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_4",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "clear(Y)",
+        "on(X, A)",
+        "holding(Z)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_5",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "holding(Y)",
+        "on-table(X)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_6",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "clear(Y)",
+        "on-table(X)",
+        "holding(Z)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_7",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_10",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(X, A)",
+        "on(Z, Y)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_11",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty",
+        "on(Z, X)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_12",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_13",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on-table(X)",
+        "arm-empty",
+        "on(Z, Y)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_8",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, A)",
+        "on(Z, X)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_9",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(Y)",
+        "on(X, A)",
+        "on(Z, X)",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_14",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on-table(X)",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_15",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(Y)",
+        "on-table(X)",
+        "on(Z, X)",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_16",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "clear(Y)",
+        "on(X, A)",
+        "holding(Z)",
+        "X != Z",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_17",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "clear(Y)",
+        "on-table(X)",
+        "holding(Z)",
+        "X != Z",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_18",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "on(A, X)",
+        "A != X",
+        "clear(A)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_19",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(X)",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "clear(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_20",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(X)",
+        "on(Z, Y)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_21",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "on(X, B)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_22",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "arm-empty",
+        "on(X, A)",
+        "on(Z, Y)",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_23",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, A)",
+        "on(Y, Z)",
+        "X != Z",
+        "Y != Z",
+        "on(Z, X)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_24",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, X)",
+        "A != X",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_25",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, X)",
+        "A != X",
+        "clear(A)",
+        "on(Z, Y)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_26",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "on-table(X)",
+        "arm-empty",
+        "on(Z, Y)",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_27",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(X, Z)",
+        "X != Z",
+        "on(Z, Y)",
+        "clear(A)",
+        "A != X",
+        "A != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_28",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty",
+        "on(Y, Z)",
+        "X != Z",
+        "Y != Z",
+        "on(Z, X)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_29",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(X, Z)",
+        "X != Z",
+        "on(Z, Y)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_30",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "on(Z, X)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_31",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_32",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(X, B)",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_33",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on(A, Y)",
+        "A != X",
+        "on(X, A)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_34",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "on(A, X)",
+        "A != X",
+        "A != Y",
+        "on(Y, A)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_35",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(Y)",
+        "on-table(X)",
+        "on(A, X)",
+        "A != X",
+        "A != Y",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_36",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(X)",
+        "on(A, Y)",
+        "A != X",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_37",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "on(B, X)",
+        "A != B",
+        "B != X",
+        "clear(B)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_38",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on-table(X)",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_39",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(X)",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "clear(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_40",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "on(B, X)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_41",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(B, X)",
+        "A != B",
+        "B != X",
+        "clear(B)",
+        "on(Z, A)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_42",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "on(Z, X)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_43",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, X)",
+        "A != X",
+        "A != Y",
+        "on(Y, Z)",
+        "A != Z",
+        "X != Z",
+        "Y != Z",
+        "on(Z, A)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_44",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(X, A)",
+        "on(Z, X)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_45",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(X, Z)",
+        "A != Z",
+        "X != Z",
+        "on(Z, A)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_46",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(B, Y)",
+        "B != X",
+        "on(X, Z)",
+        "B != Z",
+        "X != Z",
+        "on(Z, B)",
+        "clear(A)",
+        "A != B",
+        "A != X",
+        "A != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_47",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(B, X)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "on(Z, Y)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_48",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, X)",
+        "A != X",
+        "A != Y",
+        "on(Y, A)",
+        "on(Z, Y)",
+        "A != Z",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_49",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "on(X, A)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_50",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "on(A, Y)",
+        "A != X",
+        "A != Y",
+        "clear(A)",
+        "on(B, X)",
+        "A != B",
+        "B != X",
+        "B != Y",
+        "on(Y, B)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_51",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "A != Y",
+        "on(B, X)",
+        "A != B",
+        "B != X",
+        "B != Y",
+        "on(Y, B)",
+        "on(Z, A)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_52",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "arm-empty",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "on(X, A)",
+        "on(Z, X)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_53",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "on-table_via_putdown",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "arm-empty",
+        "on(X, Y)"
+      ],
+      "plan_name": "on-table_via_unstack_then_putdown",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "clear_prepare_arm-empty_",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        }
+      ],
+      "context": [
+        "on(Y, X)",
+        "not clear(Y)"
+      ],
+      "plan_name": "clear_prepare_clear_Y",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "holding_prepare_arm-empty_",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "holding_prepare_clear_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "on_prepare_arm-empty_",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "on_prepare_clear_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(Y)"
+      ],
+      "plan_name": "on_prepare_clear_Y",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not holding(X)"
+      ],
+      "plan_name": "on_prepare_holding_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not on-table(X)"
+      ],
+      "plan_name": "on_prepare_on-table_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "on-table_prepare_arm-empty_",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "on-table_prepare_clear_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not holding(X)"
+      ],
+      "plan_name": "on-table_prepare_holding_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    }
+  ]
+}

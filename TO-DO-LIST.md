@@ -41,6 +41,14 @@ certificate.
 
 ## Active Work
 
+Post-hoc semantic audit (2026-09-15): the independent call-return evaluator and
+proof replay checker are implemented. Tests cover recursion, cyclic failure,
+overlap, state-dependent subgoal returns, bindings, numeric values, and unknown
+denominators. Frozen scope: 186 atomic goal-state pairs across five unchanged
+Full GP2PL libraries, 930 requests. Next: run the frozen audit and update the
+latest supervisor manuscript; no execution-success count proves universal
+plan-template correctness.
+
 | Item | Status | Next step |
 | --- | --- | --- |
 | Full 16-domain benchmark materialization | Updated | Keep `scripts/materialize_achievement_benchmarks.py` as the single source of truth and rerun it after source-policy changes. |

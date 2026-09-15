@@ -1,0 +1,593 @@
+{
+  "domain_name": "numeric-transport",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "at(X, Y)"
+      ],
+      "plan_name": "at_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "in(X, Y)"
+      ],
+      "plan_name": "in_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, location)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y \\== Z"
+      ],
+      "plan_name": "at_via_drive",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(Z, Y)",
+        "obj_tp(Z, vehicle)",
+        "in(X, Z)"
+      ],
+      "plan_name": "at_via_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(X, A)",
+        "obj_tp(A, location)",
+        "A \\== Y",
+        "at(Z, A)",
+        "obj_tp(Z, vehicle)",
+        "capacity(Z, N)",
+        "N >= 1"
+      ],
+      "plan_name": "at_via_pick-up_then_drive_then_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(X, A)",
+        "obj_tp(A, location)",
+        "A \\== Y",
+        "at(Z, B)",
+        "obj_tp(B, location)",
+        "obj_tp(Z, vehicle)",
+        "A \\== B",
+        "B \\== Y",
+        "capacity(Z, N)",
+        "N >= 1"
+      ],
+      "plan_name": "at_via_drive_then_pick-up_then_drive_then_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "in(X, B)",
+        "obj_tp(B, vehicle)",
+        "at(B, A)",
+        "obj_tp(A, location)",
+        "A \\== Y",
+        "at(Z, A)",
+        "obj_tp(Z, vehicle)",
+        "B \\== Z",
+        "capacity(Z, N)",
+        "N >= 1"
+      ],
+      "plan_name": "at_via_drop_then_pick-up_then_drive_then_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "in(X, A)",
+        "obj_tp(A, vehicle)",
+        "at(A, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "capacity(A, N)",
+        "N >= 0"
+      ],
+      "plan_name": "moose_reduced_numeric_transport_rule_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "at(A, Z)",
+        "obj_tp(A, vehicle)",
+        "A != X",
+        "capacity(A, N)",
+        "N >= 1"
+      ],
+      "plan_name": "moose_reduced_numeric_transport_rule_3",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(A, Y)",
+        "obj_tp(A, vehicle)",
+        "A != X",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "capacity(A, N)",
+        "N >= 1"
+      ],
+      "plan_name": "moose_reduced_numeric_transport_rule_4",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(X, A)",
+        "obj_tp(A, location)",
+        "A != Y",
+        "at(B, Z)",
+        "obj_tp(B, vehicle)",
+        "obj_tp(Z, location)",
+        "A != Z",
+        "B != X",
+        "Y != Z",
+        "capacity(B, N)",
+        "N >= 1"
+      ],
+      "plan_name": "moose_reduced_numeric_transport_rule_5",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "at(Y, Z)",
+        "capacity(Y, N)",
+        "N >= 1"
+      ],
+      "plan_name": "in_via_pick-up",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(Y, Z)",
+        "obj_tp(Z, location)",
+        "not at(X, Z)"
+      ],
+      "plan_name": "in_prepare_at_X_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "not at(Y, Z)"
+      ],
+      "plan_name": "in_prepare_at_Y_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    }
+  ]
+}

@@ -1,0 +1,758 @@
+{
+  "domain_name": "miconic",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "boarded(X)"
+      ],
+      "plan_name": "boarded_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "boarded"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "lift-at(X)"
+      ],
+      "plan_name": "lift-at_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "lift-at"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "served(X)"
+      ],
+      "plan_name": "served_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "origin(X, Y)",
+        "obj_tp(Y, floor)",
+        "lift-at(Y)"
+      ],
+      "plan_name": "boarded_via_board",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "boarded"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        }
+      ],
+      "context": [
+        "obj_tp(X, floor)",
+        "above(X, Y)",
+        "obj_tp(Y, floor)",
+        "X \\== Y",
+        "lift-at(Y)"
+      ],
+      "plan_name": "lift-at_via_down",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "lift-at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        }
+      ],
+      "context": [
+        "obj_tp(X, floor)",
+        "above(Y, X)",
+        "obj_tp(Y, floor)",
+        "X \\== Y",
+        "lift-at(Y)"
+      ],
+      "plan_name": "lift-at_via_up",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "lift-at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "boarded(X)",
+        "destin(X, Y)",
+        "obj_tp(Y, floor)",
+        "lift-at(Y)"
+      ],
+      "plan_name": "served_via_depart",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "boarded(X)",
+        "destin(X, Z)",
+        "obj_tp(Z, floor)",
+        "above(Z, Y)",
+        "obj_tp(Y, floor)",
+        "Y != Z",
+        "lift-at(Y)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_2",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "boarded(X)",
+        "destin(X, Z)",
+        "obj_tp(Z, floor)",
+        "above(Y, Z)",
+        "obj_tp(Y, floor)",
+        "Y != Z",
+        "lift-at(Y)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_3",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "destin(X, Z)",
+        "obj_tp(Z, floor)",
+        "above(Z, Y)",
+        "obj_tp(Y, floor)",
+        "Y != Z",
+        "origin(X, Y)",
+        "lift-at(Y)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_4",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "destin(X, Z)",
+        "obj_tp(Z, floor)",
+        "above(Y, Z)",
+        "obj_tp(Y, floor)",
+        "Y != Z",
+        "origin(X, Y)",
+        "lift-at(Y)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_5",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "destin(X, A)",
+        "obj_tp(A, floor)",
+        "above(A, Z)",
+        "obj_tp(Z, floor)",
+        "A != Z",
+        "origin(X, Z)",
+        "above(Y, Z)",
+        "obj_tp(Y, floor)",
+        "A != Y",
+        "Y != Z",
+        "lift-at(Y)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_10",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "destin(X, A)",
+        "obj_tp(A, floor)",
+        "above(A, Z)",
+        "obj_tp(Z, floor)",
+        "A != Z",
+        "origin(X, Z)",
+        "above(Z, Y)",
+        "obj_tp(Y, floor)",
+        "A != Y",
+        "Y != Z",
+        "lift-at(Y)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_11",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "destin(X, A)",
+        "obj_tp(A, floor)",
+        "above(Z, A)",
+        "obj_tp(Z, floor)",
+        "A != Z",
+        "origin(X, Z)",
+        "above(Z, Y)",
+        "obj_tp(Y, floor)",
+        "A != Y",
+        "Y != Z",
+        "lift-at(Y)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_6",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "destin(X, Y)",
+        "obj_tp(Y, floor)",
+        "lift-at(Y)",
+        "above(Z, Y)",
+        "obj_tp(Z, floor)",
+        "Y != Z",
+        "origin(X, Z)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_7",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "destin(X, A)",
+        "obj_tp(A, floor)",
+        "above(Z, A)",
+        "obj_tp(Z, floor)",
+        "A != Z",
+        "origin(X, Z)",
+        "above(Y, Z)",
+        "obj_tp(Y, floor)",
+        "A != Y",
+        "Y != Z",
+        "lift-at(Y)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_8",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "up"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "board"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "down"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "depart"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "destin(X, Y)",
+        "obj_tp(Y, floor)",
+        "lift-at(Y)",
+        "above(Y, Z)",
+        "obj_tp(Z, floor)",
+        "Y != Z",
+        "origin(X, Z)"
+      ],
+      "plan_name": "moose_reduced_miconic_rule_9",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "lift-at"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "boarded"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "origin(X, Y)",
+        "obj_tp(Y, floor)",
+        "not lift-at(Y)"
+      ],
+      "plan_name": "boarded_prepare_lift-at_Y",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "boarded"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "boarded"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "served"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "not boarded(X)"
+      ],
+      "plan_name": "served_prepare_boarded_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "lift-at"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "served"
+        }
+      ],
+      "context": [
+        "obj_tp(X, passenger)",
+        "boarded(X)",
+        "destin(X, Y)",
+        "obj_tp(Y, floor)",
+        "not lift-at(Y)"
+      ],
+      "plan_name": "served_prepare_lift-at_Y",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "served"
+      }
+    }
+  ]
+}

@@ -1,0 +1,626 @@
+{
+  "domain_name": "transport",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "at(X, Y)"
+      ],
+      "plan_name": "at_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "capacity(X, Y)"
+      ],
+      "plan_name": "capacity_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "capacity"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "in(X, Y)"
+      ],
+      "plan_name": "in_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, location)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y \\== Z"
+      ],
+      "plan_name": "at_via_drive",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Y",
+            "X",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(B, Y)",
+        "obj_tp(B, vehicle)",
+        "in(X, B)",
+        "capacity(B, Z)",
+        "obj_tp(Z, size)",
+        "capacity-predecessor(Z, A)",
+        "obj_tp(A, size)"
+      ],
+      "plan_name": "moose_reduced_transport_rule_1",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "C",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "in(X, C)",
+        "obj_tp(C, vehicle)",
+        "at(C, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "capacity(C, A)",
+        "obj_tp(A, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(B, size)"
+      ],
+      "plan_name": "moose_reduced_transport_rule_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "C",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "at(C, Z)",
+        "obj_tp(C, vehicle)",
+        "C != X",
+        "capacity(C, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)",
+        "A != B"
+      ],
+      "plan_name": "moose_reduced_transport_rule_3",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "D",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "D",
+            "A",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "D",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "D",
+            "Y",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(X, A)",
+        "obj_tp(A, location)",
+        "A != Y",
+        "at(D, Z)",
+        "obj_tp(D, vehicle)",
+        "obj_tp(Z, location)",
+        "A != Z",
+        "D != X",
+        "Y != Z",
+        "capacity(D, C)",
+        "obj_tp(C, size)",
+        "capacity-predecessor(B, C)",
+        "obj_tp(B, size)",
+        "B != C"
+      ],
+      "plan_name": "moose_reduced_transport_rule_4",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "C",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(C, Y)",
+        "obj_tp(C, vehicle)",
+        "C != X",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "capacity(C, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)",
+        "A != B"
+      ],
+      "plan_name": "moose_reduced_transport_rule_5",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "A",
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, size)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "capacity(X, B)",
+        "obj_tp(B, size)",
+        "B \\== Y",
+        "capacity-predecessor(B, Y)",
+        "in(A, X)",
+        "obj_tp(A, package)"
+      ],
+      "plan_name": "capacity_via_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "capacity"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "A",
+            "Y",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, size)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "at(A, Z)",
+        "obj_tp(A, package)",
+        "capacity(X, B)",
+        "obj_tp(B, size)",
+        "B \\== Y",
+        "capacity-predecessor(Y, B)"
+      ],
+      "plan_name": "capacity_via_pick-up",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "capacity"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "at(Y, Z)",
+        "capacity(Y, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)"
+      ],
+      "plan_name": "in_via_pick-up",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "capacity"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, size)",
+        "capacity(X, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(Y, B)",
+        "at(A, Z)",
+        "obj_tp(A, package)",
+        "obj_tp(Z, location)",
+        "not at(X, Z)"
+      ],
+      "plan_name": "capacity_prepare_at_X_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "capacity"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(Y, Z)",
+        "obj_tp(Z, location)",
+        "not at(X, Z)",
+        "capacity(Y, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)"
+      ],
+      "plan_name": "in_prepare_at_X_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "not at(Y, Z)",
+        "capacity(Y, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)"
+      ],
+      "plan_name": "in_prepare_at_Y_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "B"
+          ],
+          "kind": "subgoal",
+          "symbol": "capacity"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "at(Y, Z)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)",
+        "obj_tp(B, size)",
+        "not capacity(Y, B)"
+      ],
+      "plan_name": "in_prepare_capacity_Y_B",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    }
+  ]
+}

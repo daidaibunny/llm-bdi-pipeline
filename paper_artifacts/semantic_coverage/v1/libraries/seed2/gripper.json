@@ -1,0 +1,870 @@
+{
+  "domain_name": "gripper",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "at(X, Y)"
+      ],
+      "plan_name": "at_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "at-robby(X)"
+      ],
+      "plan_name": "at-robby_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at-robby"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "carry(X, Y)"
+      ],
+      "plan_name": "carry_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "carry"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "free(X)"
+      ],
+      "plan_name": "free_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "free"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "at-robby(Y)",
+        "ball(X)",
+        "room(Y)",
+        "carry(X, Z)",
+        "gripper(Z)"
+      ],
+      "plan_name": "at_via_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "pick"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "at(X, A)",
+        "A \\== Y",
+        "at-robby(A)",
+        "room(A)",
+        "free(Z)",
+        "gripper(Z)"
+      ],
+      "plan_name": "at_via_pick_then_move_then_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "X",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "pick"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "carry(X, B)",
+        "gripper(B)",
+        "at-robby(A)",
+        "A \\== Y",
+        "room(A)",
+        "free(Z)",
+        "B \\== Z",
+        "gripper(Z)"
+      ],
+      "plan_name": "at_via_drop_then_pick_then_move_then_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        },
+        {
+          "arguments": [
+            "X",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "pick"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "at(X, A)",
+        "A \\== Y",
+        "room(A)",
+        "at-robby(B)",
+        "A \\== B",
+        "B \\== Y",
+        "room(B)",
+        "free(Z)",
+        "gripper(Z)"
+      ],
+      "plan_name": "at_via_move_then_pick_then_move_then_drop",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "carry(X, A)",
+        "gripper(A)",
+        "at-robby(Z)",
+        "Y != Z",
+        "room(Z)"
+      ],
+      "plan_name": "moose_reduced_gripper_rule_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "pick"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "at(X, Z)",
+        "Y != Z",
+        "at-robby(Z)",
+        "room(Z)",
+        "free(A)",
+        "gripper(A)"
+      ],
+      "plan_name": "moose_reduced_gripper_rule_3",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "pick"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "at-robby(Y)",
+        "ball(X)",
+        "room(Y)",
+        "at(X, Z)",
+        "Y != Z",
+        "room(Z)",
+        "free(A)",
+        "gripper(A)"
+      ],
+      "plan_name": "moose_reduced_gripper_rule_4",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "move"
+        }
+      ],
+      "context": [
+        "room(X)",
+        "at-robby(Y)",
+        "X \\== Y",
+        "room(Y)"
+      ],
+      "plan_name": "at-robby_via_move",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at-robby"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "pick"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "free(Y)",
+        "gripper(Y)",
+        "at(X, Z)",
+        "at-robby(Z)",
+        "room(Z)"
+      ],
+      "plan_name": "carry_via_pick",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "carry"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "pick"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "free(Y)",
+        "gripper(Y)",
+        "carry(X, A)",
+        "A \\== Y",
+        "gripper(A)",
+        "at-robby(Z)",
+        "room(Z)"
+      ],
+      "plan_name": "carry_via_drop_then_pick",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "carry"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "gripper(X)",
+        "carry(Y, X)",
+        "ball(Y)",
+        "at-robby(Z)",
+        "room(Z)"
+      ],
+      "plan_name": "free_via_drop",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "free"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "B"
+          ],
+          "kind": "subgoal",
+          "symbol": "carry"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "gripper(B)",
+        "not carry(X, B)"
+      ],
+      "plan_name": "at_prepare_carry_X_B",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "carry"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "at-robby(Y)",
+        "ball(X)",
+        "room(Y)",
+        "gripper(Z)",
+        "not carry(X, Z)"
+      ],
+      "plan_name": "at_prepare_carry_X_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "free"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "gripper(Z)",
+        "not free(Z)"
+      ],
+      "plan_name": "at_prepare_free_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-robby"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "at(X, A)",
+        "room(A)",
+        "not at-robby(A)"
+      ],
+      "plan_name": "at_prepare_at-robby_A",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-robby"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "carry(X, B)",
+        "gripper(B)",
+        "room(A)",
+        "not at-robby(A)"
+      ],
+      "plan_name": "at_prepare_at-robby_A_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-robby"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "room(Y)",
+        "room(B)",
+        "not at-robby(B)"
+      ],
+      "plan_name": "at_prepare_at-robby_B",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-robby"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "not at-robby(Y)"
+      ],
+      "plan_name": "at_prepare_at-robby_Y",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-robby"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "carry"
+        }
+      ],
+      "context": [
+        "ball(X)",
+        "free(Y)",
+        "gripper(Y)",
+        "room(Z)",
+        "not at-robby(Z)"
+      ],
+      "plan_name": "carry_prepare_at-robby_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "carry"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "free"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "carry"
+        }
+      ],
+      "context": [
+        "not free(Y)"
+      ],
+      "plan_name": "carry_prepare_free_Y",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "carry"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at-robby"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "free"
+        }
+      ],
+      "context": [
+        "gripper(X)",
+        "room(Z)",
+        "not at-robby(Z)"
+      ],
+      "plan_name": "free_prepare_at-robby_Z",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "free"
+      }
+    }
+  ]
+}

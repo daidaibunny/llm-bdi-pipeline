@@ -289,6 +289,28 @@ The architecture separates five modules.
 
 ## Experimental Comparison Contract
 
+The independent post-hoc semantic audit uses stateful call-return summaries,
+not compiler certificates or products of marginal subgoal coverage. An applicable
+fully bound plan is correct at a tested state only if its complete body has a
+finite legal execution, every achievement call returns with its own target true,
+and its final state satisfies its trigger target. Goal-state coverage uses the
+union over these witnesses; overlapping plans count once. Negative results require
+exhaustive saturation. Resource limits leave unresolved cases UNKNOWN. Empty
+applicability scopes are N/A, and incomplete binding enumeration makes the
+correctness denominator unknown rather than shrinking it.
+
+The first post-hoc audit freezes the first three held-out instances per domain
+in the original full-run test-index order, all their distinct atomic targets,
+and their initial states. The resulting 186 goal-state pairs are shared across
+all five frozen Full GP2PL libraries (930 requests). The budgets are 5 seconds,
+10,000 configurations, and 1,000,000 binding-join attempts per request. These are
+analysis limits, not bounds on plan length, recursion, or numeric values. Positive
+derivations are independently replayed; unresolved results retain logical lower
+and upper bounds. This finite diagnostic scope is not universal lifted correctness,
+uniform coverage of all world states, or a replacement for the full execution
+benchmark. The selector does not optimize this post-hoc state coverage. The frozen
+protocol and semantic library projections are under `paper_artifacts/semantic_coverage/v1`.
+
 The framework is not evaluated as though it were one more per-instance PDDL
 planner. MOOSE is one instantiated Evidence Module provider; the proposed
 components are the Typed Temporal Input Module, Validated Policy-Lifting

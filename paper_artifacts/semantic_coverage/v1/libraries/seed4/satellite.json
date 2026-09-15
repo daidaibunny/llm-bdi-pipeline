@@ -1,0 +1,1486 @@
+{
+  "domain_name": "satellite",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "calibrated(X)"
+      ],
+      "plan_name": "calibrated_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "have_image(X, Y)"
+      ],
+      "plan_name": "have_image_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "pointing(X, Y)"
+      ],
+      "plan_name": "pointing_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "pointing"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "power_avail(X)"
+      ],
+      "plan_name": "power_avail_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_avail"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "power_on(X)"
+      ],
+      "plan_name": "power_on_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "power_on(X)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_via_calibrate",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, A)",
+        "obj_tp(A, satellite)",
+        "power_avail(A)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_via_switch_on_then_calibrate",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(Z, X)",
+        "obj_tp(Z, satellite)",
+        "on_board(A, Z)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "calibrated(A)",
+        "power_on(A)"
+      ],
+      "plan_name": "have_image_via_take_image",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "A",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(Z, X)",
+        "obj_tp(Z, satellite)",
+        "on_board(A, Z)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "power_on(A)",
+        "calibration_target(A, C)",
+        "obj_tp(C, direction)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, C)"
+      ],
+      "plan_name": "have_image_via_calibrate_then_take_image",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "calibrated(A)",
+        "power_on(A)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_3",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "A",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, instrument)",
+        "supports(Z, Y)",
+        "power_on(Z)",
+        "on_board(Z, A)",
+        "obj_tp(A, satellite)",
+        "pointing(A, X)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_4",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(A, X)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "power_on(A)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_5",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "A",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, instrument)",
+        "supports(Z, Y)",
+        "on_board(Z, A)",
+        "obj_tp(A, satellite)",
+        "pointing(A, X)",
+        "power_avail(A)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_6",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "power_on(A)",
+        "calibration_target(A, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, Z)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_7",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(B, X)",
+        "obj_tp(B, satellite)",
+        "on_board(A, B)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "power_on(A)",
+        "calibration_target(A, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_10",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "B",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(B, Y)",
+        "obj_tp(B, instrument)",
+        "power_on(B)",
+        "calibration_target(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(B, C)",
+        "obj_tp(C, satellite)",
+        "pointing(C, A)",
+        "obj_tp(A, direction)",
+        "A != X",
+        "A != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_11",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(A, X)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "power_avail(B)",
+        "pointing(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_8",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "calibration_target(A, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, Z)",
+        "power_avail(B)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_9",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(B, X)",
+        "obj_tp(B, satellite)",
+        "power_avail(B)",
+        "on_board(A, B)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "calibration_target(A, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_12",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "B",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(B, Y)",
+        "obj_tp(B, instrument)",
+        "calibration_target(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(B, C)",
+        "obj_tp(C, satellite)",
+        "power_avail(C)",
+        "pointing(C, A)",
+        "obj_tp(A, direction)",
+        "A != X",
+        "A != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_13",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "obj_tp(Y, direction)",
+        "not pointing(X, Y)",
+        "pointing(X, Z)",
+        "obj_tp(Z, direction)",
+        "Y \\== Z"
+      ],
+      "plan_name": "pointing_via_turn_to",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "pointing"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "obj_tp(Y, direction)",
+        "pointing(X, Z)",
+        "obj_tp(Z, direction)",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "pointing"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "switch_off"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "on_board(Y, X)",
+        "obj_tp(Y, instrument)",
+        "power_on(Y)"
+      ],
+      "plan_name": "power_avail_via_switch_off",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_avail"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "switch_off"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "on_board(Y, X)",
+        "obj_tp(Y, instrument)",
+        "on_board(Y, Z)",
+        "obj_tp(Z, satellite)",
+        "X \\== Z",
+        "power_avail(Z)"
+      ],
+      "plan_name": "power_avail_via_switch_on_then_switch_off",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_avail"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "power_avail(Y)"
+      ],
+      "plan_name": "power_on_via_switch_on",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "switch_off"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "on_board(Z, Y)",
+        "obj_tp(Z, instrument)",
+        "X \\== Z",
+        "power_on(Z)"
+      ],
+      "plan_name": "power_on_via_switch_off_then_switch_on",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_on"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "power_on(X)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "not pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_prepare_pointing_Y_Z",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, A)",
+        "obj_tp(A, satellite)",
+        "power_avail(A)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "not pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_prepare_pointing_Y_Z_2",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_avail"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, A)",
+        "obj_tp(A, satellite)",
+        "not power_avail(A)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_prepare_power_avail_A",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "not power_on(X)"
+      ],
+      "plan_name": "calibrated_prepare_power_on_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "power_on(A)",
+        "not calibrated(A)",
+        "calibration_target(A, C)",
+        "on_board(A, B)",
+        "on_board(A, D)",
+        "on_board(A, Z)",
+        "obj_tp(Z, satellite)"
+      ],
+      "plan_name": "have_image_prepare_calibrated_A",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(Z, X)",
+        "obj_tp(Z, satellite)",
+        "on_board(A, Z)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "power_on(A)",
+        "calibration_target(A, C)",
+        "obj_tp(C, direction)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "not pointing(B, C)"
+      ],
+      "plan_name": "have_image_prepare_pointing_B_C",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "calibration_target(A, C)",
+        "on_board(A, B)",
+        "on_board(A, D)",
+        "on_board(A, Z)",
+        "obj_tp(Z, satellite)",
+        "not pointing(Z, X)"
+      ],
+      "plan_name": "have_image_prepare_pointing_Z_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "power_on(A)",
+        "calibration_target(A, C)",
+        "obj_tp(C, direction)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, C)",
+        "on_board(A, Z)",
+        "obj_tp(Z, satellite)",
+        "not pointing(Z, X)"
+      ],
+      "plan_name": "have_image_prepare_pointing_Z_X_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "calibrated(A)",
+        "not power_on(A)",
+        "calibration_target(A, C)",
+        "on_board(A, B)",
+        "on_board(A, D)",
+        "on_board(A, Z)",
+        "obj_tp(Z, satellite)"
+      ],
+      "plan_name": "have_image_prepare_power_on_A",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(Z, X)",
+        "obj_tp(Z, satellite)",
+        "on_board(A, Z)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "not power_on(A)",
+        "calibration_target(A, C)",
+        "obj_tp(C, direction)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, C)"
+      ],
+      "plan_name": "have_image_prepare_power_on_A_2",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_avail"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "on_board(Y, X)",
+        "obj_tp(Y, instrument)",
+        "not power_on(Y)"
+      ],
+      "plan_name": "power_avail_prepare_power_on_Y",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_avail"
+      }
+    }
+  ]
+}

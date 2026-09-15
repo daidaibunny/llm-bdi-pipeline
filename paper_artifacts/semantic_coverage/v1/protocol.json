@@ -1,0 +1,3247 @@
+{
+  "branch_correctness": "existential complete execution per applicable full binding",
+  "cases": [
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot1",
+          "cocktail2"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_01.pddl",
+      "problem_sha256": "4d2bd81fc2942f9b820d5bd80d874a291cc6b35c24e3e9da1c5b1b91bff6b774"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot2",
+          "cocktail1"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_01.pddl",
+      "problem_sha256": "4d2bd81fc2942f9b820d5bd80d874a291cc6b35c24e3e9da1c5b1b91bff6b774"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot3",
+          "cocktail4"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_01.pddl",
+      "problem_sha256": "4d2bd81fc2942f9b820d5bd80d874a291cc6b35c24e3e9da1c5b1b91bff6b774"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot4",
+          "cocktail3"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_01.pddl",
+      "problem_sha256": "4d2bd81fc2942f9b820d5bd80d874a291cc6b35c24e3e9da1c5b1b91bff6b774"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot1",
+          "cocktail1"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_02.pddl",
+      "problem_sha256": "bcf99961fdbff3492a6ba6efce5a438337e08474c67d2e871629b209e12d962c"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot2",
+          "cocktail3"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_02.pddl",
+      "problem_sha256": "bcf99961fdbff3492a6ba6efce5a438337e08474c67d2e871629b209e12d962c"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot3",
+          "cocktail4"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_02.pddl",
+      "problem_sha256": "bcf99961fdbff3492a6ba6efce5a438337e08474c67d2e871629b209e12d962c"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot4",
+          "cocktail2"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_02.pddl",
+      "problem_sha256": "bcf99961fdbff3492a6ba6efce5a438337e08474c67d2e871629b209e12d962c"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot1",
+          "cocktail4"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_03.pddl",
+      "problem_sha256": "c92be32345686923bfcca89cedf1afe78aaf29337544e0a7ee3392de9679c9a5"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot2",
+          "cocktail2"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_03.pddl",
+      "problem_sha256": "c92be32345686923bfcca89cedf1afe78aaf29337544e0a7ee3392de9679c9a5"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot3",
+          "cocktail1"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_03.pddl",
+      "problem_sha256": "c92be32345686923bfcca89cedf1afe78aaf29337544e0a7ee3392de9679c9a5"
+    },
+    {
+      "domain": "barman",
+      "domain_file": "src/domains/barman/domain.pddl",
+      "domain_sha256": "fc6c6593fef53f1f9f2e16edd056e34a0198c93e32105cb85dd982ba129ef2f2",
+      "goal": {
+        "arguments": [
+          "shot4",
+          "cocktail3"
+        ],
+        "symbol": "contains"
+      },
+      "problem": "src/domains/barman/test/p0_03.pddl",
+      "problem_sha256": "c92be32345686923bfcca89cedf1afe78aaf29337544e0a7ee3392de9679c9a5"
+    },
+    {
+      "domain": "blocksworld-clear",
+      "domain_file": "src/domains/blocksworld-clear/domain.pddl",
+      "domain_sha256": "201f01d39f91830f9d38c1b8db298f913b7285d2a5b21294b01d3cce3967ec9c",
+      "goal": {
+        "arguments": [
+          "b1"
+        ],
+        "symbol": "clear"
+      },
+      "problem": "src/domains/blocksworld-clear/test/p-50-0.pddl",
+      "problem_sha256": "6b5b405abb9799b0da1874ed0cebae9d12091fae7deeb9ee23ee01cd9176d6ea"
+    },
+    {
+      "domain": "blocksworld-clear",
+      "domain_file": "src/domains/blocksworld-clear/domain.pddl",
+      "domain_sha256": "201f01d39f91830f9d38c1b8db298f913b7285d2a5b21294b01d3cce3967ec9c",
+      "goal": {
+        "arguments": [
+          "b1"
+        ],
+        "symbol": "clear"
+      },
+      "problem": "src/domains/blocksworld-clear/test/p-51-0.pddl",
+      "problem_sha256": "97926aedbfa018949e1d70c5ac3acc624105417731e6f6ef5d0fddbfd1fda22c"
+    },
+    {
+      "domain": "blocksworld-clear",
+      "domain_file": "src/domains/blocksworld-clear/domain.pddl",
+      "domain_sha256": "201f01d39f91830f9d38c1b8db298f913b7285d2a5b21294b01d3cce3967ec9c",
+      "goal": {
+        "arguments": [
+          "b1"
+        ],
+        "symbol": "clear"
+      },
+      "problem": "src/domains/blocksworld-clear/test/p-52-0.pddl",
+      "problem_sha256": "d5c4297fdf64dcc47cd817fa589a5dc86a6ab0a3c4dd098ed76d7e2dbc3f5cb4"
+    },
+    {
+      "domain": "blocksworld-on",
+      "domain_file": "src/domains/blocksworld-on/domain.pddl",
+      "domain_sha256": "201f01d39f91830f9d38c1b8db298f913b7285d2a5b21294b01d3cce3967ec9c",
+      "goal": {
+        "arguments": [
+          "b1",
+          "b2"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-on/test/p-50-0.pddl",
+      "problem_sha256": "b037fc8e37a955d55fdaa961329fa380e2ca027c8ab515088131052d04607d80"
+    },
+    {
+      "domain": "blocksworld-on",
+      "domain_file": "src/domains/blocksworld-on/domain.pddl",
+      "domain_sha256": "201f01d39f91830f9d38c1b8db298f913b7285d2a5b21294b01d3cce3967ec9c",
+      "goal": {
+        "arguments": [
+          "b1",
+          "b2"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-on/test/p-51-0.pddl",
+      "problem_sha256": "fd8b7126cbd7d547c20b3ca774740027c71a3579c6a4247895fccfe863b18aa6"
+    },
+    {
+      "domain": "blocksworld-on",
+      "domain_file": "src/domains/blocksworld-on/domain.pddl",
+      "domain_sha256": "201f01d39f91830f9d38c1b8db298f913b7285d2a5b21294b01d3cce3967ec9c",
+      "goal": {
+        "arguments": [
+          "b1",
+          "b2"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-on/test/p-52-0.pddl",
+      "problem_sha256": "9461ecc59a1b3c82bd1a55e57fabae8f1d9155608c94abaf7bf0ca9def382f6b"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "a",
+          "f"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "b",
+          "i"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "c",
+          "e"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "e",
+          "k"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "f",
+          "l"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "g",
+          "b"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "h",
+          "a"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "i",
+          "d"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "j",
+          "c"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "k",
+          "h"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "l",
+          "g"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "problem_sha256": "934d301b8addd2c2e597c3a78a2d056f01c7f0f79d849ec91ff8cd5c31e6fdfe"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "a",
+          "m"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "b",
+          "k"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "c",
+          "d"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "d",
+          "f"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "e",
+          "l"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "f",
+          "a"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "g",
+          "i"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "h",
+          "e"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "i",
+          "c"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "j",
+          "b"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "l",
+          "j"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "m",
+          "h"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "problem_sha256": "36667ddfbf641c22339d9ce2e6f28de0911090ea8dbfe7b90eaad1874e01d11f"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "a",
+          "e"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "c",
+          "j"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "d",
+          "a"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "e",
+          "l"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "f",
+          "k"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "g",
+          "h"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "h",
+          "i"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "i",
+          "b"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "j",
+          "f"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "k",
+          "g"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "l",
+          "m"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "blocksworld-tower",
+      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
+      "domain_sha256": "e6efdd60a9ed75dc1a45fc21201beb0b870c6a6a978c73474e4b3e377dd40a1a",
+      "goal": {
+        "arguments": [
+          "m",
+          "c"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "problem_sha256": "098234a8fb3cf98fe6f9689638a3206baf3d10d268a9c956f8389a7b5c16d299"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate0",
+          "pallet4"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate1",
+          "crate12"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate10",
+          "crate13"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate12",
+          "pallet5"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate13",
+          "pallet1"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate14",
+          "crate10"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate2",
+          "crate0"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate3",
+          "crate9"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate5",
+          "pallet0"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate6",
+          "crate2"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate9",
+          "pallet2"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p12.pddl",
+      "problem_sha256": "f4376d276d02d2d0b45e69a486823c0f47e1c60e404f25e7e8f5c4e3fac914f3"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate0",
+          "pallet0"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p13.pddl",
+      "problem_sha256": "7cc01c29db1bb0010f021cf40daf0904598a388a888fedf9361a8e15ec67f13e"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate1",
+          "pallet5"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p13.pddl",
+      "problem_sha256": "7cc01c29db1bb0010f021cf40daf0904598a388a888fedf9361a8e15ec67f13e"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate2",
+          "pallet4"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p13.pddl",
+      "problem_sha256": "7cc01c29db1bb0010f021cf40daf0904598a388a888fedf9361a8e15ec67f13e"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate3",
+          "pallet7"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p13.pddl",
+      "problem_sha256": "7cc01c29db1bb0010f021cf40daf0904598a388a888fedf9361a8e15ec67f13e"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate4",
+          "pallet9"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p13.pddl",
+      "problem_sha256": "7cc01c29db1bb0010f021cf40daf0904598a388a888fedf9361a8e15ec67f13e"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate5",
+          "pallet1"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p13.pddl",
+      "problem_sha256": "7cc01c29db1bb0010f021cf40daf0904598a388a888fedf9361a8e15ec67f13e"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate1",
+          "pallet8"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p14.pddl",
+      "problem_sha256": "ec70f362d8a84fcb9a1631c246e1c9b15ee0bce253ce67debd59190d6d626909"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate2",
+          "pallet3"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p14.pddl",
+      "problem_sha256": "ec70f362d8a84fcb9a1631c246e1c9b15ee0bce253ce67debd59190d6d626909"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate4",
+          "pallet0"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p14.pddl",
+      "problem_sha256": "ec70f362d8a84fcb9a1631c246e1c9b15ee0bce253ce67debd59190d6d626909"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate5",
+          "pallet5"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p14.pddl",
+      "problem_sha256": "ec70f362d8a84fcb9a1631c246e1c9b15ee0bce253ce67debd59190d6d626909"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate6",
+          "pallet1"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p14.pddl",
+      "problem_sha256": "ec70f362d8a84fcb9a1631c246e1c9b15ee0bce253ce67debd59190d6d626909"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate7",
+          "crate6"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p14.pddl",
+      "problem_sha256": "ec70f362d8a84fcb9a1631c246e1c9b15ee0bce253ce67debd59190d6d626909"
+    },
+    {
+      "domain": "depots",
+      "domain_file": "src/domains/depots/domain.pddl",
+      "domain_sha256": "c22654e285ca24028e0c252745d998bfa3c2b570a66a8aaee0ad79f6be442d87",
+      "goal": {
+        "arguments": [
+          "crate9",
+          "crate7"
+        ],
+        "symbol": "on"
+      },
+      "problem": "src/domains/depots/test/p14.pddl",
+      "problem_sha256": "ec70f362d8a84fcb9a1631c246e1c9b15ee0bce253ce67debd59190d6d626909"
+    },
+    {
+      "domain": "ferry",
+      "domain_file": "src/domains/ferry/domain.pddl",
+      "domain_sha256": "1ec29f9db186c698471f72d65b4a4c28f17fb32454c95366656b580702acc0d5",
+      "goal": {
+        "arguments": [
+          "car1",
+          "loc3"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/ferry/test/p0_01.pddl",
+      "problem_sha256": "626329fe37c66e208920090e9a2a79c14701f97b96a82d40fa0eac170aa45653"
+    },
+    {
+      "domain": "ferry",
+      "domain_file": "src/domains/ferry/domain.pddl",
+      "domain_sha256": "1ec29f9db186c698471f72d65b4a4c28f17fb32454c95366656b580702acc0d5",
+      "goal": {
+        "arguments": [
+          "car2",
+          "loc3"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/ferry/test/p0_01.pddl",
+      "problem_sha256": "626329fe37c66e208920090e9a2a79c14701f97b96a82d40fa0eac170aa45653"
+    },
+    {
+      "domain": "ferry",
+      "domain_file": "src/domains/ferry/domain.pddl",
+      "domain_sha256": "1ec29f9db186c698471f72d65b4a4c28f17fb32454c95366656b580702acc0d5",
+      "goal": {
+        "arguments": [
+          "car1",
+          "loc1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/ferry/test/p0_02.pddl",
+      "problem_sha256": "e264a198df60e5a98fc31ff7344cb6e1e68a450fd9ba95ce111b22dbd4639bea"
+    },
+    {
+      "domain": "ferry",
+      "domain_file": "src/domains/ferry/domain.pddl",
+      "domain_sha256": "1ec29f9db186c698471f72d65b4a4c28f17fb32454c95366656b580702acc0d5",
+      "goal": {
+        "arguments": [
+          "car2",
+          "loc1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/ferry/test/p0_02.pddl",
+      "problem_sha256": "e264a198df60e5a98fc31ff7344cb6e1e68a450fd9ba95ce111b22dbd4639bea"
+    },
+    {
+      "domain": "ferry",
+      "domain_file": "src/domains/ferry/domain.pddl",
+      "domain_sha256": "1ec29f9db186c698471f72d65b4a4c28f17fb32454c95366656b580702acc0d5",
+      "goal": {
+        "arguments": [
+          "car1",
+          "loc5"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/ferry/test/p0_03.pddl",
+      "problem_sha256": "f2f48be02c769d1f4f50d89c1ca425a3fdfd313603c3a3e5281f7aca7f610ffe"
+    },
+    {
+      "domain": "ferry",
+      "domain_file": "src/domains/ferry/domain.pddl",
+      "domain_sha256": "1ec29f9db186c698471f72d65b4a4c28f17fb32454c95366656b580702acc0d5",
+      "goal": {
+        "arguments": [
+          "car2",
+          "loc2"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/ferry/test/p0_03.pddl",
+      "problem_sha256": "f2f48be02c769d1f4f50d89c1ca425a3fdfd313603c3a3e5281f7aca7f610ffe"
+    },
+    {
+      "domain": "ferry",
+      "domain_file": "src/domains/ferry/domain.pddl",
+      "domain_sha256": "1ec29f9db186c698471f72d65b4a4c28f17fb32454c95366656b580702acc0d5",
+      "goal": {
+        "arguments": [
+          "car3",
+          "loc3"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/ferry/test/p0_03.pddl",
+      "problem_sha256": "f2f48be02c769d1f4f50d89c1ca425a3fdfd313603c3a3e5281f7aca7f610ffe"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball1",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball10",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball11",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball2",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball3",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball4",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball5",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball6",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball7",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball8",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball9",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_01.pddl",
+      "problem_sha256": "f81835f1c5ab9f03e4f89ca3551f7148c8ffcf1f687a1cb51a1f67dfcef9a800"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball1",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball10",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball11",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball12",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball2",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball3",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball4",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball5",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball6",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball7",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball8",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball9",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_02.pddl",
+      "problem_sha256": "f0f983730ca20effec12e2ba6fc42c07d01c8851f7de2740574f76de1bfbefb6"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball1",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball10",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball11",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball12",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball13",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball2",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball3",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball4",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball5",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball6",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball7",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball8",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "gripper",
+      "domain_file": "src/domains/gripper/domain.pddl",
+      "domain_sha256": "c1b0874b8122ed7858c3873dc304d2da03a99a229ed39d49cff4515f39b906da",
+      "goal": {
+        "arguments": [
+          "ball9",
+          "roomb"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/gripper/test/p0_03.pddl",
+      "problem_sha256": "b95e8bf64d92250d60180193249f1773fb8ce182200f5bd9a4d198c516beb574"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p0",
+          "l0-0"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_01.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l0-1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_01.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p2",
+          "l0-0"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_01.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p3",
+          "l0-0"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_01.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p4",
+          "l0-1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_01.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p0",
+          "l0-0"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_02.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l0-1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_02.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p2",
+          "l0-0"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_02.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p3",
+          "l0-0"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_02.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p4",
+          "l0-1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_02.pddl",
+      "problem_sha256": "c738bedbbd6589cbf9c0652c07b0ff179916997d7a9919f21c4e120f2c794c8f"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p0",
+          "l0-1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_03.pddl",
+      "problem_sha256": "494d2ce1f75c6c25eef892e211eb49d92cc3b66827945b6d3159c2d42cded038"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l0-0"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_03.pddl",
+      "problem_sha256": "494d2ce1f75c6c25eef892e211eb49d92cc3b66827945b6d3159c2d42cded038"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p2",
+          "l0-1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_03.pddl",
+      "problem_sha256": "494d2ce1f75c6c25eef892e211eb49d92cc3b66827945b6d3159c2d42cded038"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p3",
+          "l0-0"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_03.pddl",
+      "problem_sha256": "494d2ce1f75c6c25eef892e211eb49d92cc3b66827945b6d3159c2d42cded038"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p4",
+          "l0-1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_03.pddl",
+      "problem_sha256": "494d2ce1f75c6c25eef892e211eb49d92cc3b66827945b6d3159c2d42cded038"
+    },
+    {
+      "domain": "logistics",
+      "domain_file": "src/domains/logistics/domain.pddl",
+      "domain_sha256": "c88bb63cb0cdd9e3de41d98204c6c4dd1dd24d55598c5d773e2f68fa4e7bf26d",
+      "goal": {
+        "arguments": [
+          "p5",
+          "l0-1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/logistics/test/p0_03.pddl",
+      "problem_sha256": "494d2ce1f75c6c25eef892e211eb49d92cc3b66827945b6d3159c2d42cded038"
+    },
+    {
+      "domain": "miconic",
+      "domain_file": "src/domains/miconic/domain.pddl",
+      "domain_sha256": "5106d779fc312911befcb120967729f5ec44c040b0a792ad147f6bf8a94b5465",
+      "goal": {
+        "arguments": [
+          "p1"
+        ],
+        "symbol": "served"
+      },
+      "problem": "src/domains/miconic/test/p0_01.pddl",
+      "problem_sha256": "7166ecb57e8902c50156ef8305994006e08c06d82e2bbc3853e642514471308d"
+    },
+    {
+      "domain": "miconic",
+      "domain_file": "src/domains/miconic/domain.pddl",
+      "domain_sha256": "5106d779fc312911befcb120967729f5ec44c040b0a792ad147f6bf8a94b5465",
+      "goal": {
+        "arguments": [
+          "p1"
+        ],
+        "symbol": "served"
+      },
+      "problem": "src/domains/miconic/test/p0_02.pddl",
+      "problem_sha256": "2b5fc4d57ee83551ff46db6711177e478deed04931af999cb4c17e89d29cea0a"
+    },
+    {
+      "domain": "miconic",
+      "domain_file": "src/domains/miconic/domain.pddl",
+      "domain_sha256": "5106d779fc312911befcb120967729f5ec44c040b0a792ad147f6bf8a94b5465",
+      "goal": {
+        "arguments": [
+          "p1"
+        ],
+        "symbol": "served"
+      },
+      "problem": "src/domains/miconic/test/p0_03.pddl",
+      "problem_sha256": "7217286330942f7da0165aace015c66aa23577071f2805680b067812dd96cbef"
+    },
+    {
+      "domain": "numeric-ferry",
+      "domain_file": "src/domains/numeric-ferry/domain.pddl",
+      "domain_sha256": "015680afbb5a41cca15199039f6c821c77f822b5abc3859672629c725053c955",
+      "goal": {
+        "arguments": [
+          "car1",
+          "loc3"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-ferry/test/p0_01.pddl",
+      "problem_sha256": "1ce4c4e078661a8c21e1cea631831e7e6d983422d2e71dde8c00c290bdce6a02"
+    },
+    {
+      "domain": "numeric-ferry",
+      "domain_file": "src/domains/numeric-ferry/domain.pddl",
+      "domain_sha256": "015680afbb5a41cca15199039f6c821c77f822b5abc3859672629c725053c955",
+      "goal": {
+        "arguments": [
+          "car2",
+          "loc3"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-ferry/test/p0_01.pddl",
+      "problem_sha256": "1ce4c4e078661a8c21e1cea631831e7e6d983422d2e71dde8c00c290bdce6a02"
+    },
+    {
+      "domain": "numeric-ferry",
+      "domain_file": "src/domains/numeric-ferry/domain.pddl",
+      "domain_sha256": "015680afbb5a41cca15199039f6c821c77f822b5abc3859672629c725053c955",
+      "goal": {
+        "arguments": [
+          "car1",
+          "loc1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-ferry/test/p0_02.pddl",
+      "problem_sha256": "4c38702cf786488726b10c707a55d2a3de46fecfe043b6eaa211a288d3d4ced2"
+    },
+    {
+      "domain": "numeric-ferry",
+      "domain_file": "src/domains/numeric-ferry/domain.pddl",
+      "domain_sha256": "015680afbb5a41cca15199039f6c821c77f822b5abc3859672629c725053c955",
+      "goal": {
+        "arguments": [
+          "car2",
+          "loc1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-ferry/test/p0_02.pddl",
+      "problem_sha256": "4c38702cf786488726b10c707a55d2a3de46fecfe043b6eaa211a288d3d4ced2"
+    },
+    {
+      "domain": "numeric-ferry",
+      "domain_file": "src/domains/numeric-ferry/domain.pddl",
+      "domain_sha256": "015680afbb5a41cca15199039f6c821c77f822b5abc3859672629c725053c955",
+      "goal": {
+        "arguments": [
+          "car1",
+          "loc5"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-ferry/test/p0_03.pddl",
+      "problem_sha256": "f3432aa1ffcb4a10d1930a1eb6bd2598622ca0aae8c39779ad4266d91f93e148"
+    },
+    {
+      "domain": "numeric-ferry",
+      "domain_file": "src/domains/numeric-ferry/domain.pddl",
+      "domain_sha256": "015680afbb5a41cca15199039f6c821c77f822b5abc3859672629c725053c955",
+      "goal": {
+        "arguments": [
+          "car2",
+          "loc2"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-ferry/test/p0_03.pddl",
+      "problem_sha256": "f3432aa1ffcb4a10d1930a1eb6bd2598622ca0aae8c39779ad4266d91f93e148"
+    },
+    {
+      "domain": "numeric-ferry",
+      "domain_file": "src/domains/numeric-ferry/domain.pddl",
+      "domain_sha256": "015680afbb5a41cca15199039f6c821c77f822b5abc3859672629c725053c955",
+      "goal": {
+        "arguments": [
+          "car3",
+          "loc3"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-ferry/test/p0_03.pddl",
+      "problem_sha256": "f3432aa1ffcb4a10d1930a1eb6bd2598622ca0aae8c39779ad4266d91f93e148"
+    },
+    {
+      "domain": "numeric-miconic",
+      "domain_file": "src/domains/numeric-miconic/domain.pddl",
+      "domain_sha256": "894729c2138335e8ef7981b6d4de65dfde97232ac809c1613a0da6303687d3de",
+      "goal": {
+        "arguments": [
+          "p1"
+        ],
+        "symbol": "served"
+      },
+      "problem": "src/domains/numeric-miconic/test/p0_01.pddl",
+      "problem_sha256": "d0518cab2eecd86ae1c57dc67091f01024f1afb3d39d17686441e92617cbd4b8"
+    },
+    {
+      "domain": "numeric-miconic",
+      "domain_file": "src/domains/numeric-miconic/domain.pddl",
+      "domain_sha256": "894729c2138335e8ef7981b6d4de65dfde97232ac809c1613a0da6303687d3de",
+      "goal": {
+        "arguments": [
+          "p1"
+        ],
+        "symbol": "served"
+      },
+      "problem": "src/domains/numeric-miconic/test/p0_02.pddl",
+      "problem_sha256": "c0830bc2b7c2646b0d7345354e058ef23587842e4664dad0c1ce165e4c81fa70"
+    },
+    {
+      "domain": "numeric-miconic",
+      "domain_file": "src/domains/numeric-miconic/domain.pddl",
+      "domain_sha256": "894729c2138335e8ef7981b6d4de65dfde97232ac809c1613a0da6303687d3de",
+      "goal": {
+        "arguments": [
+          "p1"
+        ],
+        "symbol": "served"
+      },
+      "problem": "src/domains/numeric-miconic/test/p0_03.pddl",
+      "problem_sha256": "af6db02f8b37b82df80709ce8d6d6054081ecb4c89f27434d0c2496480c03eeb"
+    },
+    {
+      "domain": "numeric-minecraft",
+      "domain_file": "src/domains/numeric-minecraft/domain.pddl",
+      "domain_sha256": "ca814576e6337fec2223b648190d4024c6a4e5cebbfc4019dd6e86c7daf9252a",
+      "goal": {
+        "arguments": [
+          "0"
+        ],
+        "symbol": "pogo_sticks_to_make"
+      },
+      "problem": "src/domains/numeric-minecraft/test/p0_01.pddl",
+      "problem_sha256": "08195ec310f42cc1445388332423b28e4be2452090a3db54cdf57541f4cb409e"
+    },
+    {
+      "domain": "numeric-minecraft",
+      "domain_file": "src/domains/numeric-minecraft/domain.pddl",
+      "domain_sha256": "ca814576e6337fec2223b648190d4024c6a4e5cebbfc4019dd6e86c7daf9252a",
+      "goal": {
+        "arguments": [
+          "0"
+        ],
+        "symbol": "pogo_sticks_to_make"
+      },
+      "problem": "src/domains/numeric-minecraft/test/p0_02.pddl",
+      "problem_sha256": "db42eddb90710f95d3874b0c820bb33f518a0f6e09cb86cd6406a159e15f8516"
+    },
+    {
+      "domain": "numeric-minecraft",
+      "domain_file": "src/domains/numeric-minecraft/domain.pddl",
+      "domain_sha256": "ca814576e6337fec2223b648190d4024c6a4e5cebbfc4019dd6e86c7daf9252a",
+      "goal": {
+        "arguments": [
+          "0"
+        ],
+        "symbol": "pogo_sticks_to_make"
+      },
+      "problem": "src/domains/numeric-minecraft/test/p0_03.pddl",
+      "problem_sha256": "74bac3642e58f5baf1d552b7e63cf62359751aefa1635e4092885e8bda6b66b6"
+    },
+    {
+      "domain": "numeric-transport",
+      "domain_file": "src/domains/numeric-transport/domain.pddl",
+      "domain_sha256": "1de134b589deb9c41988ef20368e1e3755d21fb7fae8a811147b872f827a9c79",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l3"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-transport/test/p0_01.pddl",
+      "problem_sha256": "097b55a087c515c3f90e71512c97d018b65eae345662207e432a2f09b286c98d"
+    },
+    {
+      "domain": "numeric-transport",
+      "domain_file": "src/domains/numeric-transport/domain.pddl",
+      "domain_sha256": "1de134b589deb9c41988ef20368e1e3755d21fb7fae8a811147b872f827a9c79",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l2"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-transport/test/p0_02.pddl",
+      "problem_sha256": "d937518379bf989596398661b227a17923578ed33cfd9efed413dbe369025b35"
+    },
+    {
+      "domain": "numeric-transport",
+      "domain_file": "src/domains/numeric-transport/domain.pddl",
+      "domain_sha256": "1de134b589deb9c41988ef20368e1e3755d21fb7fae8a811147b872f827a9c79",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l4"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-transport/test/p0_03.pddl",
+      "problem_sha256": "d729738ea274de9145010674ff225f14507aeac3e70d0c57b1c2b87e6705defb"
+    },
+    {
+      "domain": "numeric-transport",
+      "domain_file": "src/domains/numeric-transport/domain.pddl",
+      "domain_sha256": "1de134b589deb9c41988ef20368e1e3755d21fb7fae8a811147b872f827a9c79",
+      "goal": {
+        "arguments": [
+          "p2",
+          "l1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/numeric-transport/test/p0_03.pddl",
+      "problem_sha256": "d729738ea274de9145010674ff225f14507aeac3e70d0c57b1c2b87e6705defb"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint2"
+        ],
+        "symbol": "communicated_rock_data"
+      },
+      "problem": "src/domains/rovers/test/p0_01.pddl",
+      "problem_sha256": "4358d514423225a281db8e85fb8eeb1125b677b3a5d7ddea209bb4a1cdc47c3c"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint3"
+        ],
+        "symbol": "communicated_rock_data"
+      },
+      "problem": "src/domains/rovers/test/p0_01.pddl",
+      "problem_sha256": "4358d514423225a281db8e85fb8eeb1125b677b3a5d7ddea209bb4a1cdc47c3c"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint2"
+        ],
+        "symbol": "communicated_soil_data"
+      },
+      "problem": "src/domains/rovers/test/p0_01.pddl",
+      "problem_sha256": "4358d514423225a281db8e85fb8eeb1125b677b3a5d7ddea209bb4a1cdc47c3c"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "objective1",
+          "colour"
+        ],
+        "symbol": "communicated_image_data"
+      },
+      "problem": "src/domains/rovers/test/p0_02.pddl",
+      "problem_sha256": "43f2e96971f5d1317dc3faf341ecd6e81ffb0add3265861d98bc92103d407537"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "objective1",
+          "low_res"
+        ],
+        "symbol": "communicated_image_data"
+      },
+      "problem": "src/domains/rovers/test/p0_02.pddl",
+      "problem_sha256": "43f2e96971f5d1317dc3faf341ecd6e81ffb0add3265861d98bc92103d407537"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint1"
+        ],
+        "symbol": "communicated_rock_data"
+      },
+      "problem": "src/domains/rovers/test/p0_02.pddl",
+      "problem_sha256": "43f2e96971f5d1317dc3faf341ecd6e81ffb0add3265861d98bc92103d407537"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint4"
+        ],
+        "symbol": "communicated_rock_data"
+      },
+      "problem": "src/domains/rovers/test/p0_02.pddl",
+      "problem_sha256": "43f2e96971f5d1317dc3faf341ecd6e81ffb0add3265861d98bc92103d407537"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint3"
+        ],
+        "symbol": "communicated_soil_data"
+      },
+      "problem": "src/domains/rovers/test/p0_02.pddl",
+      "problem_sha256": "43f2e96971f5d1317dc3faf341ecd6e81ffb0add3265861d98bc92103d407537"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "objective1",
+          "high_res"
+        ],
+        "symbol": "communicated_image_data"
+      },
+      "problem": "src/domains/rovers/test/p0_03.pddl",
+      "problem_sha256": "379a40cd9963f9fefee1fd472c7f5237a5686b2a8bad4a0ec9a76cc4cddc91f4"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "objective1",
+          "low_res"
+        ],
+        "symbol": "communicated_image_data"
+      },
+      "problem": "src/domains/rovers/test/p0_03.pddl",
+      "problem_sha256": "379a40cd9963f9fefee1fd472c7f5237a5686b2a8bad4a0ec9a76cc4cddc91f4"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint1"
+        ],
+        "symbol": "communicated_rock_data"
+      },
+      "problem": "src/domains/rovers/test/p0_03.pddl",
+      "problem_sha256": "379a40cd9963f9fefee1fd472c7f5237a5686b2a8bad4a0ec9a76cc4cddc91f4"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint3"
+        ],
+        "symbol": "communicated_rock_data"
+      },
+      "problem": "src/domains/rovers/test/p0_03.pddl",
+      "problem_sha256": "379a40cd9963f9fefee1fd472c7f5237a5686b2a8bad4a0ec9a76cc4cddc91f4"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint1"
+        ],
+        "symbol": "communicated_soil_data"
+      },
+      "problem": "src/domains/rovers/test/p0_03.pddl",
+      "problem_sha256": "379a40cd9963f9fefee1fd472c7f5237a5686b2a8bad4a0ec9a76cc4cddc91f4"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint2"
+        ],
+        "symbol": "communicated_soil_data"
+      },
+      "problem": "src/domains/rovers/test/p0_03.pddl",
+      "problem_sha256": "379a40cd9963f9fefee1fd472c7f5237a5686b2a8bad4a0ec9a76cc4cddc91f4"
+    },
+    {
+      "domain": "rovers",
+      "domain_file": "src/domains/rovers/domain.pddl",
+      "domain_sha256": "d5e8bb88e335d2847d4e5ed13623fd22ffcfc8e095fd2e46775ec214ce5843d4",
+      "goal": {
+        "arguments": [
+          "waypoint4"
+        ],
+        "symbol": "communicated_soil_data"
+      },
+      "problem": "src/domains/rovers/test/p0_03.pddl",
+      "problem_sha256": "379a40cd9963f9fefee1fd472c7f5237a5686b2a8bad4a0ec9a76cc4cddc91f4"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "dir2",
+          "mod1"
+        ],
+        "symbol": "have_image"
+      },
+      "problem": "src/domains/satellite/test/p0_01.pddl",
+      "problem_sha256": "6271be7f44ea6d0a7dc6f8da6e095de5cc0e19418603e52045082255e19b5f0d"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "sat3",
+          "dir1"
+        ],
+        "symbol": "pointing"
+      },
+      "problem": "src/domains/satellite/test/p0_01.pddl",
+      "problem_sha256": "6271be7f44ea6d0a7dc6f8da6e095de5cc0e19418603e52045082255e19b5f0d"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "dir1",
+          "mod1"
+        ],
+        "symbol": "have_image"
+      },
+      "problem": "src/domains/satellite/test/p0_02.pddl",
+      "problem_sha256": "9e8a061445c49b758db5a2fc7dcfb815ebe5eb8024ceb9616d3bfcdfe417a88e"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "dir4",
+          "mod1"
+        ],
+        "symbol": "have_image"
+      },
+      "problem": "src/domains/satellite/test/p0_02.pddl",
+      "problem_sha256": "9e8a061445c49b758db5a2fc7dcfb815ebe5eb8024ceb9616d3bfcdfe417a88e"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "sat1",
+          "dir3"
+        ],
+        "symbol": "pointing"
+      },
+      "problem": "src/domains/satellite/test/p0_02.pddl",
+      "problem_sha256": "9e8a061445c49b758db5a2fc7dcfb815ebe5eb8024ceb9616d3bfcdfe417a88e"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "sat3",
+          "dir4"
+        ],
+        "symbol": "pointing"
+      },
+      "problem": "src/domains/satellite/test/p0_02.pddl",
+      "problem_sha256": "9e8a061445c49b758db5a2fc7dcfb815ebe5eb8024ceb9616d3bfcdfe417a88e"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "dir1",
+          "mod1"
+        ],
+        "symbol": "have_image"
+      },
+      "problem": "src/domains/satellite/test/p0_03.pddl",
+      "problem_sha256": "7bcf1419c6047666c37f8b53baaec0a876081aaefa2eb13b6c6bd592fe700c40"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "dir2",
+          "mod1"
+        ],
+        "symbol": "have_image"
+      },
+      "problem": "src/domains/satellite/test/p0_03.pddl",
+      "problem_sha256": "7bcf1419c6047666c37f8b53baaec0a876081aaefa2eb13b6c6bd592fe700c40"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "dir3",
+          "mod1"
+        ],
+        "symbol": "have_image"
+      },
+      "problem": "src/domains/satellite/test/p0_03.pddl",
+      "problem_sha256": "7bcf1419c6047666c37f8b53baaec0a876081aaefa2eb13b6c6bd592fe700c40"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "sat1",
+          "dir4"
+        ],
+        "symbol": "pointing"
+      },
+      "problem": "src/domains/satellite/test/p0_03.pddl",
+      "problem_sha256": "7bcf1419c6047666c37f8b53baaec0a876081aaefa2eb13b6c6bd592fe700c40"
+    },
+    {
+      "domain": "satellite",
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "domain_sha256": "4059c67c27cd14143d366d71ca4d72c4d8b7e961e94364751e130ec03b0a9a49",
+      "goal": {
+        "arguments": [
+          "sat2",
+          "dir1"
+        ],
+        "symbol": "pointing"
+      },
+      "problem": "src/domains/satellite/test/p0_03.pddl",
+      "problem_sha256": "7bcf1419c6047666c37f8b53baaec0a876081aaefa2eb13b6c6bd592fe700c40"
+    },
+    {
+      "domain": "transport",
+      "domain_file": "src/domains/transport/domain.pddl",
+      "domain_sha256": "9f817bd6acceb818d015577ad987c7a4e5da80f3f05c9eadc35c6b0abfb5f687",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l3"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/transport/test/p0_01.pddl",
+      "problem_sha256": "9852f255f71f8356c7476015a2914601b73e26c5da2d4b52a9d3bc9ea4467b0b"
+    },
+    {
+      "domain": "transport",
+      "domain_file": "src/domains/transport/domain.pddl",
+      "domain_sha256": "9f817bd6acceb818d015577ad987c7a4e5da80f3f05c9eadc35c6b0abfb5f687",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l2"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/transport/test/p0_02.pddl",
+      "problem_sha256": "e7ffedca7b69a426821c6914f4dac318176219555dff33577eeead0c9b67da63"
+    },
+    {
+      "domain": "transport",
+      "domain_file": "src/domains/transport/domain.pddl",
+      "domain_sha256": "9f817bd6acceb818d015577ad987c7a4e5da80f3f05c9eadc35c6b0abfb5f687",
+      "goal": {
+        "arguments": [
+          "p1",
+          "l4"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/transport/test/p0_03.pddl",
+      "problem_sha256": "80f626c1011741f2defbf2b1a85855912d50d3b82a828a2c7f8f9668c34527bc"
+    },
+    {
+      "domain": "transport",
+      "domain_file": "src/domains/transport/domain.pddl",
+      "domain_sha256": "9f817bd6acceb818d015577ad987c7a4e5da80f3f05c9eadc35c6b0abfb5f687",
+      "goal": {
+        "arguments": [
+          "p2",
+          "l1"
+        ],
+        "symbol": "at"
+      },
+      "problem": "src/domains/transport/test/p0_03.pddl",
+      "problem_sha256": "80f626c1011741f2defbf2b1a85855912d50d3b82a828a2c7f8f9668c34527bc"
+    }
+  ],
+  "instances_per_domain": 3,
+  "libraries": [
+    {
+      "domain": "barman",
+      "file": "libraries/seed0/barman.json",
+      "original_json_sha256": "50bdd5d8fa4784fff057f193da6607d2d5bb441e908da20db1785a9e35625c67",
+      "seed": 0,
+      "sha256": "e449202c0f264a48e673c5c9a04b29920af1961757161255873a7ae02a108161",
+      "template_count": 501
+    },
+    {
+      "domain": "blocksworld-clear",
+      "file": "libraries/seed0/blocksworld-clear.json",
+      "original_json_sha256": "149b453a186ba172c460925279a559f22aa11c8c140ee4b4785d1bf3509982a3",
+      "seed": 0,
+      "sha256": "3a0ef8b799606321851031c69d9c7d3449ee501af5fae567b92bb42bdfdea62f",
+      "template_count": 34
+    },
+    {
+      "domain": "blocksworld-on",
+      "file": "libraries/seed0/blocksworld-on.json",
+      "original_json_sha256": "9459f08a6a427cf88d2e489d299bf92961890610e8b5c9d66929cf769a45f062",
+      "seed": 0,
+      "sha256": "b7be320424fb84a91cd52553e05ff972c8856a72891c96956980b88dc18ad592",
+      "template_count": 80
+    },
+    {
+      "domain": "blocksworld-tower",
+      "file": "libraries/seed0/blocksworld-tower.json",
+      "original_json_sha256": "5fc3c37224ce9179d67215dfd98c9ea514236074697cdfd40585f7f7652300f3",
+      "seed": 0,
+      "sha256": "d40eedbd4dc43a00bd06269e913f4f2d8128f45fdfdc190e6675292db10940c8",
+      "template_count": 178
+    },
+    {
+      "domain": "depots",
+      "file": "libraries/seed0/depots.json",
+      "original_json_sha256": "2b435d9a7cf7e08ef137056954d3cacb8d0388190366a8235893fecaef43aa4a",
+      "seed": 0,
+      "sha256": "c48a9d41e774cceaf3656614bd4b3eba0cbe24cb6d5394c1d96a9d8aa5e9dbfb",
+      "template_count": 255
+    },
+    {
+      "domain": "ferry",
+      "file": "libraries/seed0/ferry.json",
+      "original_json_sha256": "e41b5ffab9946035db37f5190879e28149fcdfdd84a47070bfad3780edc97c73",
+      "seed": 0,
+      "sha256": "84dd1c1db561cb5cbd0838bb633f3d2e931e83576cc47ba06903a65e1ef0ffbd",
+      "template_count": 21
+    },
+    {
+      "domain": "gripper",
+      "file": "libraries/seed0/gripper.json",
+      "original_json_sha256": "bc1b98d2f7f4029d68b342c93fe5b4295d9890b8e437dde3725c7f289bfc4f3b",
+      "seed": 0,
+      "sha256": "3c5fa0ded48aff71c88ab49f824634659b92c1a4f738177927baa53135cb42aa",
+      "template_count": 25
+    },
+    {
+      "domain": "logistics",
+      "file": "libraries/seed0/logistics.json",
+      "original_json_sha256": "639364d83df1f0830b6d6a6779bb179f35ddeae5d5ba35f973f24ba9173e7c88",
+      "seed": 0,
+      "sha256": "f7e1e50936e8db3e784dc359c22c2f82cd6774f930b2a998841e656760d43c5e",
+      "template_count": 111
+    },
+    {
+      "domain": "miconic",
+      "file": "libraries/seed0/miconic.json",
+      "original_json_sha256": "cabe121f5806d43fe58acf22ec17f7aa5b7803b30edefd8557824ddb988368bc",
+      "seed": 0,
+      "sha256": "eace58b979690f69b984d329430e21cc5db1ec9e5f471d66e561d22cbe4a07ca",
+      "template_count": 20
+    },
+    {
+      "domain": "numeric-ferry",
+      "file": "libraries/seed0/numeric-ferry.json",
+      "original_json_sha256": "5542e06a05a12acc31fdb6a29c46c88d49f8e63d4535d56bd23843bf4f4b0a11",
+      "seed": 0,
+      "sha256": "175d053ab4511b7a136f8e20bc0b5caacc61906c37995f4a32410e4f57bd59ec",
+      "template_count": 17
+    },
+    {
+      "domain": "numeric-miconic",
+      "file": "libraries/seed0/numeric-miconic.json",
+      "original_json_sha256": "d1ba0a9d57ab24b51ee249659b721906160738977c43a69f861dd5e6fe522249",
+      "seed": 0,
+      "sha256": "5671d9819206eb77306c33730ae4de389df77c0c98460f972e77c2238432a12a",
+      "template_count": 26
+    },
+    {
+      "domain": "numeric-minecraft",
+      "file": "libraries/seed0/numeric-minecraft.json",
+      "original_json_sha256": "1ec3931749db4e1ae05478cba39a49d7ea5290afd6b6bb810c9d5e11419d6677",
+      "seed": 0,
+      "sha256": "fa8945d0c28e989a0e752d7fb75fb67fffd8286a74abf08e30140c570fdb4c55",
+      "template_count": 22
+    },
+    {
+      "domain": "numeric-transport",
+      "file": "libraries/seed0/numeric-transport.json",
+      "original_json_sha256": "b4dd0caacfed136ed2b6a3433550bf8d5042cd5b005450dc449f9f45fa6276fa",
+      "seed": 0,
+      "sha256": "e12edf1d7c63dcf044a976052d3cb6301d232f5ec751def7a6f3f7c3527dd953",
+      "template_count": 14
+    },
+    {
+      "domain": "rovers",
+      "file": "libraries/seed0/rovers.json",
+      "original_json_sha256": "2e84eddf84d34a3de31a0b14dd08b59bee51ab385b7e8500200bcf414867f33f",
+      "seed": 0,
+      "sha256": "63dc5ec4ea54e0a9086574f8e3a76adb03dada6bd6d77dbdc53f0b3bde27f45e",
+      "template_count": 124
+    },
+    {
+      "domain": "satellite",
+      "file": "libraries/seed0/satellite.json",
+      "original_json_sha256": "f6afbefaed3e8f9cd61bac6ce6487630f82fb4a7c9bc174ba5d5f36d4d04f03a",
+      "seed": 0,
+      "sha256": "407e4613ffdc26f86b451491a4e9d2db9e56cacbc25e8595a3caf9422cab57fb",
+      "template_count": 38
+    },
+    {
+      "domain": "transport",
+      "file": "libraries/seed0/transport.json",
+      "original_json_sha256": "53111e2eaf2e1cf3f4390b0a8daacb8a2b2c0674093fe9d59b76fc2662e48ffc",
+      "seed": 0,
+      "sha256": "2ef6930ae463b53c500a564d67281044d9624303a48305bff0cf0fe990250a96",
+      "template_count": 16
+    },
+    {
+      "domain": "barman",
+      "file": "libraries/seed1/barman.json",
+      "original_json_sha256": "d257c01b77519c01744da4f135ed59dabf624923f08d278d5902edc89accce23",
+      "seed": 1,
+      "sha256": "c6069b3bf728148cf9cd6f1d1ece876676df62babdb9ee429cc8fe63d92914b2",
+      "template_count": 505
+    },
+    {
+      "domain": "blocksworld-clear",
+      "file": "libraries/seed1/blocksworld-clear.json",
+      "original_json_sha256": "c92452317414547060e3d785ac0c96cfd85bf5f7bfa64dfa5ee1d389a7ce084e",
+      "seed": 1,
+      "sha256": "3a0ef8b799606321851031c69d9c7d3449ee501af5fae567b92bb42bdfdea62f",
+      "template_count": 34
+    },
+    {
+      "domain": "blocksworld-on",
+      "file": "libraries/seed1/blocksworld-on.json",
+      "original_json_sha256": "f25c70286eeaac825016dadd8934f9be5fae4d0d02d6e1e6e2826b859a4af71e",
+      "seed": 1,
+      "sha256": "215b7250767a3a0094143e7ec2c5f374c4f1bc0096ff306aa44882d46b0074aa",
+      "template_count": 80
+    },
+    {
+      "domain": "blocksworld-tower",
+      "file": "libraries/seed1/blocksworld-tower.json",
+      "original_json_sha256": "d196ede068201890e7988507559a7c897ff8b99a18a20f26e97a05dbd993d6f4",
+      "seed": 1,
+      "sha256": "588ce6d99ed0d9a26ad34505fce57b018899b6615d4fe32cc5f0088731b55930",
+      "template_count": 181
+    },
+    {
+      "domain": "depots",
+      "file": "libraries/seed1/depots.json",
+      "original_json_sha256": "96819b632c703346d1e0a92f0cc4c4dc86b66095e172bb2aae6e76ef104ebed4",
+      "seed": 1,
+      "sha256": "13dfabe25604ca1650f93edc4d89c059055d1fb941fb4e9488d109af0b950192",
+      "template_count": 260
+    },
+    {
+      "domain": "ferry",
+      "file": "libraries/seed1/ferry.json",
+      "original_json_sha256": "7ea1d00241db6c5ba977573accd23e014b745dc81259914d3f0cbcf761c9662a",
+      "seed": 1,
+      "sha256": "84dd1c1db561cb5cbd0838bb633f3d2e931e83576cc47ba06903a65e1ef0ffbd",
+      "template_count": 21
+    },
+    {
+      "domain": "gripper",
+      "file": "libraries/seed1/gripper.json",
+      "original_json_sha256": "797d8c7edd504db720297108d3794a2d0dfdc4f8095113048407b2863eb43c9f",
+      "seed": 1,
+      "sha256": "3c5fa0ded48aff71c88ab49f824634659b92c1a4f738177927baa53135cb42aa",
+      "template_count": 25
+    },
+    {
+      "domain": "logistics",
+      "file": "libraries/seed1/logistics.json",
+      "original_json_sha256": "f2a7f0d1d2915a0a1a342dc5ddabe49e0f12861bd22c6a44eade367255aa8497",
+      "seed": 1,
+      "sha256": "a283aab2b4d75862b11d2d51493d0625c2b6989c9f0d7c6ae0345a69d29cc47c",
+      "template_count": 110
+    },
+    {
+      "domain": "miconic",
+      "file": "libraries/seed1/miconic.json",
+      "original_json_sha256": "628b7f6ea42cbcbc9099a9300b5197194bbb564e8334eb0330c90972736e6d0e",
+      "seed": 1,
+      "sha256": "ab3f3c90e5c5d2e6c3ca5ba14e3e406bfde2bdbb1bc12a2de759765a9e9ddbb0",
+      "template_count": 20
+    },
+    {
+      "domain": "numeric-ferry",
+      "file": "libraries/seed1/numeric-ferry.json",
+      "original_json_sha256": "dab1e48dc85ae15702064a25662f0bb64504fbd5fa738eb6e16e59db39377d15",
+      "seed": 1,
+      "sha256": "175d053ab4511b7a136f8e20bc0b5caacc61906c37995f4a32410e4f57bd59ec",
+      "template_count": 17
+    },
+    {
+      "domain": "numeric-miconic",
+      "file": "libraries/seed1/numeric-miconic.json",
+      "original_json_sha256": "8e57b758932bf1119e7f93f3daedfd96828ba829adb8aa04d2eeaff6098055ad",
+      "seed": 1,
+      "sha256": "98142b4e3fbdef565df4bf4c40af31f9099fcace67d496ae2374028561493fcc",
+      "template_count": 26
+    },
+    {
+      "domain": "numeric-minecraft",
+      "file": "libraries/seed1/numeric-minecraft.json",
+      "original_json_sha256": "225f6e97c1a0956d1bd492bef4280cb56039f25c7a6e060c3d61c956fb3ac676",
+      "seed": 1,
+      "sha256": "fa8945d0c28e989a0e752d7fb75fb67fffd8286a74abf08e30140c570fdb4c55",
+      "template_count": 22
+    },
+    {
+      "domain": "numeric-transport",
+      "file": "libraries/seed1/numeric-transport.json",
+      "original_json_sha256": "6ccd501066869eb94b41a7c5cd594e23b12ff63804063b7b929c7a430d587222",
+      "seed": 1,
+      "sha256": "1df81121f5f49fa68159edda513281da429cb58f190a7bf60a4b3fb957c2128c",
+      "template_count": 14
+    },
+    {
+      "domain": "rovers",
+      "file": "libraries/seed1/rovers.json",
+      "original_json_sha256": "0011a12c1930d1bb646f473876ba2c4e6b933b50d4bf30e8e19f81b10c1ac3b0",
+      "seed": 1,
+      "sha256": "1a1f1ccf4eb52c61576a7650e5faa24ee1ee16d1c191579d07d9a230b1b73622",
+      "template_count": 124
+    },
+    {
+      "domain": "satellite",
+      "file": "libraries/seed1/satellite.json",
+      "original_json_sha256": "855d1ee67bf940d451a1967f01c416934d61519182723f881145ba516622251e",
+      "seed": 1,
+      "sha256": "5fff8eb9df51bd1e94c855c903913a48fa11b95824cbacf56957fb004ef57754",
+      "template_count": 38
+    },
+    {
+      "domain": "transport",
+      "file": "libraries/seed1/transport.json",
+      "original_json_sha256": "5bc92bdd6e58572b4e71bccced0d941173d9a9585c996da5c417046c2c7f300a",
+      "seed": 1,
+      "sha256": "2ef6930ae463b53c500a564d67281044d9624303a48305bff0cf0fe990250a96",
+      "template_count": 16
+    },
+    {
+      "domain": "barman",
+      "file": "libraries/seed2/barman.json",
+      "original_json_sha256": "3c1fcd823c0b7d2cafa066cc894ea4fa3724acf03392066552119e2064845ed6",
+      "seed": 2,
+      "sha256": "80e6bd425126b8332337a722b54eaf8668f48939d7f26e1e545895de437874ca",
+      "template_count": 500
+    },
+    {
+      "domain": "blocksworld-clear",
+      "file": "libraries/seed2/blocksworld-clear.json",
+      "original_json_sha256": "e55371e58f0f0ad8ef8de4b8569cbca076f19ee97836af6f67767844106f514c",
+      "seed": 2,
+      "sha256": "3a0ef8b799606321851031c69d9c7d3449ee501af5fae567b92bb42bdfdea62f",
+      "template_count": 34
+    },
+    {
+      "domain": "blocksworld-on",
+      "file": "libraries/seed2/blocksworld-on.json",
+      "original_json_sha256": "df9512496020800e0e7c3dd1b64acf5891f47d977ac2e02ed4eb8e901826bd69",
+      "seed": 2,
+      "sha256": "8fa476126ab30703e796b6889254bb561aa7c3cee43ef16310290485d3d56385",
+      "template_count": 80
+    },
+    {
+      "domain": "blocksworld-tower",
+      "file": "libraries/seed2/blocksworld-tower.json",
+      "original_json_sha256": "2e1018e16f4a0935098fe58c9bfdc70c92003c521db0dc0bb78f09b9ae92265a",
+      "seed": 2,
+      "sha256": "ceea451722b0795317bba9b85900cf07ca2c4b6db877331b76638489657b310c",
+      "template_count": 188
+    },
+    {
+      "domain": "depots",
+      "file": "libraries/seed2/depots.json",
+      "original_json_sha256": "ba75c609acca90ac5aa5fc99a80c31264bbbe17c3c8cb0658d19e67e3a77a111",
+      "seed": 2,
+      "sha256": "d7c76246fd602605b30bda86b176aa9d2e106af569e328289ffe9b28d5e7a99e",
+      "template_count": 255
+    },
+    {
+      "domain": "ferry",
+      "file": "libraries/seed2/ferry.json",
+      "original_json_sha256": "f6b811a442172a8bdfbe0af2714fd4b80bb4748d6d49efce37743c8ab72dd1a8",
+      "seed": 2,
+      "sha256": "84dd1c1db561cb5cbd0838bb633f3d2e931e83576cc47ba06903a65e1ef0ffbd",
+      "template_count": 21
+    },
+    {
+      "domain": "gripper",
+      "file": "libraries/seed2/gripper.json",
+      "original_json_sha256": "555e308c2c52ce543a5dbff56b6c7856800c5d488e1c1c7ba5c1199c7b5f3124",
+      "seed": 2,
+      "sha256": "3c5fa0ded48aff71c88ab49f824634659b92c1a4f738177927baa53135cb42aa",
+      "template_count": 25
+    },
+    {
+      "domain": "logistics",
+      "file": "libraries/seed2/logistics.json",
+      "original_json_sha256": "7a52edfdc47d624e363219c0f28bea56d3a8843b85767430ea3200ce528305d7",
+      "seed": 2,
+      "sha256": "92587f00e3164cf1c1fb61361ca196dcc09d93008840bd749705ff2f63f21ee1",
+      "template_count": 107
+    },
+    {
+      "domain": "miconic",
+      "file": "libraries/seed2/miconic.json",
+      "original_json_sha256": "c337d8c9532e197167acedf93f13f56ea475eed1a2397a31ec6c662e51259f17",
+      "seed": 2,
+      "sha256": "571e3662396af0f1ea962690bf47dd10a833c21eb628f57d47e2d88802baf99f",
+      "template_count": 20
+    },
+    {
+      "domain": "numeric-ferry",
+      "file": "libraries/seed2/numeric-ferry.json",
+      "original_json_sha256": "d471a907f3e10dee0c5d59101c0e3b26096243316efd2beb1aa9d880182c82a9",
+      "seed": 2,
+      "sha256": "1a3c7cf7d9ce2212a18ca12d1f8f04d19641a590b03342eba18344a20acd59d2",
+      "template_count": 17
+    },
+    {
+      "domain": "numeric-miconic",
+      "file": "libraries/seed2/numeric-miconic.json",
+      "original_json_sha256": "6af75faddd7419f8945ad374db8abc154040ff706f52257e76ab69358838b359",
+      "seed": 2,
+      "sha256": "5880c693325ea05d1aba08d5bd2e4e4d5f0bd7f22effdd6efdb962c609806082",
+      "template_count": 26
+    },
+    {
+      "domain": "numeric-minecraft",
+      "file": "libraries/seed2/numeric-minecraft.json",
+      "original_json_sha256": "57159f9aaeb75965fcc8d1744e47265bf506768b1ba5875ec1fb9325d6fcc04c",
+      "seed": 2,
+      "sha256": "fa8945d0c28e989a0e752d7fb75fb67fffd8286a74abf08e30140c570fdb4c55",
+      "template_count": 22
+    },
+    {
+      "domain": "numeric-transport",
+      "file": "libraries/seed2/numeric-transport.json",
+      "original_json_sha256": "e8f8a2198a2ed47ba8d6d81be2968d184d7cecd3418d0851f1da1fd7bec83078",
+      "seed": 2,
+      "sha256": "e12edf1d7c63dcf044a976052d3cb6301d232f5ec751def7a6f3f7c3527dd953",
+      "template_count": 14
+    },
+    {
+      "domain": "rovers",
+      "file": "libraries/seed2/rovers.json",
+      "original_json_sha256": "ef546595f978b1769a89419f07fc95b409ea1ba777cec50e74a58fc5335f3853",
+      "seed": 2,
+      "sha256": "ce180e7c3c700013ea24a219a79e5c9486029098aad04b8f0c99d921e1983049",
+      "template_count": 127
+    },
+    {
+      "domain": "satellite",
+      "file": "libraries/seed2/satellite.json",
+      "original_json_sha256": "e8845b9dcd2e1b5da5c644f820b66e0a75b994c9d05d20b1c605c97cb992421b",
+      "seed": 2,
+      "sha256": "f90198366b266d95d551e15f3509ffa3e0380c24b4c6f4220ba5e071314a4c7b",
+      "template_count": 37
+    },
+    {
+      "domain": "transport",
+      "file": "libraries/seed2/transport.json",
+      "original_json_sha256": "06cd3fe56e0496087a6c7b9919230b27e738c33dcfb00192ce70df9a04c5d854",
+      "seed": 2,
+      "sha256": "c33567a5afcf530889755b105e190445d7465f6f62cdb32a6cc643d43a1cf9dc",
+      "template_count": 16
+    },
+    {
+      "domain": "barman",
+      "file": "libraries/seed3/barman.json",
+      "original_json_sha256": "37595aceb6a365ecc4ef81920ed325e5581fe9ea3a41acc433588dc193000eec",
+      "seed": 3,
+      "sha256": "6f06e59450a59a79df5ba29e6e5f59ab002fcc54999aae544c5d7302f7302a76",
+      "template_count": 490
+    },
+    {
+      "domain": "blocksworld-clear",
+      "file": "libraries/seed3/blocksworld-clear.json",
+      "original_json_sha256": "e66aeaf0cc3173ac26bc93ee8153d6bf7cf3b74a5aa4fd8a7e23939298b70405",
+      "seed": 3,
+      "sha256": "3a0ef8b799606321851031c69d9c7d3449ee501af5fae567b92bb42bdfdea62f",
+      "template_count": 34
+    },
+    {
+      "domain": "blocksworld-on",
+      "file": "libraries/seed3/blocksworld-on.json",
+      "original_json_sha256": "1016eaec9441296ba8777ff4aad7d569e8b690c2cb4bd47a9abfb32c2869c924",
+      "seed": 3,
+      "sha256": "1195f0bd8d8c55f750c259405003623100dc78756ff951edffc9aa158ac4a403",
+      "template_count": 80
+    },
+    {
+      "domain": "blocksworld-tower",
+      "file": "libraries/seed3/blocksworld-tower.json",
+      "original_json_sha256": "36961ad51cc05d5bdaadafdf000dd28cbff387c9b912ceae687efc192889a75e",
+      "seed": 3,
+      "sha256": "b992a22977f08ef5dc5b7a7ae2271543fea6c287fbaf735c729d6cb84990d4b0",
+      "template_count": 205
+    },
+    {
+      "domain": "depots",
+      "file": "libraries/seed3/depots.json",
+      "original_json_sha256": "1385982272427d7cd769dc7b672abf1fddbf1eddb6b46284fc751aa7a3e05507",
+      "seed": 3,
+      "sha256": "3b9ca127a346a59d550cc5c99d26db6e90cd09d8f5f89e3460fd35cb6613eef3",
+      "template_count": 269
+    },
+    {
+      "domain": "ferry",
+      "file": "libraries/seed3/ferry.json",
+      "original_json_sha256": "09368fc0a7b513c7d5ac74b11959f2c41408430fbc82f56c6c1873792be7570b",
+      "seed": 3,
+      "sha256": "3ef3f028ed939752928d50a810988718f07f453474a27e60fae17a167f994596",
+      "template_count": 21
+    },
+    {
+      "domain": "gripper",
+      "file": "libraries/seed3/gripper.json",
+      "original_json_sha256": "683d849f243d984e2bf6f5bc532c8d34ea6a8aeab21d20c103b9404ea78f1635",
+      "seed": 3,
+      "sha256": "3c5fa0ded48aff71c88ab49f824634659b92c1a4f738177927baa53135cb42aa",
+      "template_count": 25
+    },
+    {
+      "domain": "logistics",
+      "file": "libraries/seed3/logistics.json",
+      "original_json_sha256": "ee7c5581eb64868a9743db78328999e7b3531a12ff5beede00084076a1d4c1ca",
+      "seed": 3,
+      "sha256": "8a9e9be0dfe2834d73249a1bd941ce3cc9e796f4243eb4958cce953a82cb50e9",
+      "template_count": 111
+    },
+    {
+      "domain": "miconic",
+      "file": "libraries/seed3/miconic.json",
+      "original_json_sha256": "fc907cf693427a22c1643ed90edd337c0d17fb745c3746ca678f3980288ef3b7",
+      "seed": 3,
+      "sha256": "b91c09f92bbc71290a311190d2d6b248c26dfea894a40cae92f376591cec086e",
+      "template_count": 20
+    },
+    {
+      "domain": "numeric-ferry",
+      "file": "libraries/seed3/numeric-ferry.json",
+      "original_json_sha256": "04629f2e57b2b1042bc71610fd9dc124a729ab73163144754ea51d434d0c0da2",
+      "seed": 3,
+      "sha256": "1a3c7cf7d9ce2212a18ca12d1f8f04d19641a590b03342eba18344a20acd59d2",
+      "template_count": 17
+    },
+    {
+      "domain": "numeric-miconic",
+      "file": "libraries/seed3/numeric-miconic.json",
+      "original_json_sha256": "00e08cfab79305fba64bd818870cdaf11d19ae5c7648578f4372f6dd9a8aea5e",
+      "seed": 3,
+      "sha256": "244ccb7d1fb6eb49fc39e6f9ef58e1ddaf2fc1385e59f72adfc4adb61bbc4fb1",
+      "template_count": 26
+    },
+    {
+      "domain": "numeric-minecraft",
+      "file": "libraries/seed3/numeric-minecraft.json",
+      "original_json_sha256": "2263c374bd75e2b93fe7dcc54a3c0ce5fc7ddc384ef06d3832762a05be5c1915",
+      "seed": 3,
+      "sha256": "fa8945d0c28e989a0e752d7fb75fb67fffd8286a74abf08e30140c570fdb4c55",
+      "template_count": 22
+    },
+    {
+      "domain": "numeric-transport",
+      "file": "libraries/seed3/numeric-transport.json",
+      "original_json_sha256": "1965113b80e334b4cec126308641243ce7f1d5b54b64becd70c01a47524a1e7e",
+      "seed": 3,
+      "sha256": "e12edf1d7c63dcf044a976052d3cb6301d232f5ec751def7a6f3f7c3527dd953",
+      "template_count": 14
+    },
+    {
+      "domain": "rovers",
+      "file": "libraries/seed3/rovers.json",
+      "original_json_sha256": "48bfc9b5ee87b6dda0fee28091252e02440b845364b50b1b44e3a67715b5442d",
+      "seed": 3,
+      "sha256": "09ee7bdb41fa6a6e2fb6abc4d558f6ee1c3dcb52c6f82bcaf9fe73c2e0057b2e",
+      "template_count": 125
+    },
+    {
+      "domain": "satellite",
+      "file": "libraries/seed3/satellite.json",
+      "original_json_sha256": "afe600419d308e611b74035ff16d1784ef26da3e0da23f3ff8ee167a43f14fd3",
+      "seed": 3,
+      "sha256": "f78fa617a383478bc5ee52c06a4bfd32d6bb588d9a9c772eefc19e7e41199245",
+      "template_count": 37
+    },
+    {
+      "domain": "transport",
+      "file": "libraries/seed3/transport.json",
+      "original_json_sha256": "f5d2fc728b56c3f529ce87cc7b023e480c569e7eecb4d72dbdd4fec9b46d2dd6",
+      "seed": 3,
+      "sha256": "2ef6930ae463b53c500a564d67281044d9624303a48305bff0cf0fe990250a96",
+      "template_count": 16
+    },
+    {
+      "domain": "barman",
+      "file": "libraries/seed4/barman.json",
+      "original_json_sha256": "78546bd0234dac785bd2bb9b2d2e737a0bc944589731c65cc5d75d280561423b",
+      "seed": 4,
+      "sha256": "d20e7e452ecf1d1acefd96e54a625cd4656491fcc10de7a21a4d61cbb6c7b359",
+      "template_count": 498
+    },
+    {
+      "domain": "blocksworld-clear",
+      "file": "libraries/seed4/blocksworld-clear.json",
+      "original_json_sha256": "a5e9641a49b141681c87005346580e09054864e04ca8c2c479b772c99aeabc81",
+      "seed": 4,
+      "sha256": "3a0ef8b799606321851031c69d9c7d3449ee501af5fae567b92bb42bdfdea62f",
+      "template_count": 34
+    },
+    {
+      "domain": "blocksworld-on",
+      "file": "libraries/seed4/blocksworld-on.json",
+      "original_json_sha256": "f16df5cfdf77857a37d3603416e98637d5bea0060fb3401afceb4a0027520a2d",
+      "seed": 4,
+      "sha256": "29fa5bcd08d4ad7ca068e1d033efff0bbcbae01310a5d765535039ffa7bdc854",
+      "template_count": 80
+    },
+    {
+      "domain": "blocksworld-tower",
+      "file": "libraries/seed4/blocksworld-tower.json",
+      "original_json_sha256": "f04038168e2157a5d213e1d6b7cdeb8209763dbb1d5c4b371a4ceb22a6dce4e8",
+      "seed": 4,
+      "sha256": "bdf8f9af6f91002344eda247a7b39a9eb4cccba12036c16924c9caeba2e94a58",
+      "template_count": 211
+    },
+    {
+      "domain": "depots",
+      "file": "libraries/seed4/depots.json",
+      "original_json_sha256": "14005b52c97b7139ba086fab2719ec476fd09b491e778a9daa1ab72583c3f440",
+      "seed": 4,
+      "sha256": "7fa6b72447d67fc1be734c51135fe8f2b90336130bd9605e7599f90b410f8da4",
+      "template_count": 263
+    },
+    {
+      "domain": "ferry",
+      "file": "libraries/seed4/ferry.json",
+      "original_json_sha256": "7f227a584496cd0dad7e5fbd53dffcb9c0427116b117cfcf2990171a0bc91b3a",
+      "seed": 4,
+      "sha256": "3ef3f028ed939752928d50a810988718f07f453474a27e60fae17a167f994596",
+      "template_count": 21
+    },
+    {
+      "domain": "gripper",
+      "file": "libraries/seed4/gripper.json",
+      "original_json_sha256": "fcaf383f11a526fc049cb143b66d120499b58189ad4da097f2c10f3f67bb449d",
+      "seed": 4,
+      "sha256": "3c5fa0ded48aff71c88ab49f824634659b92c1a4f738177927baa53135cb42aa",
+      "template_count": 25
+    },
+    {
+      "domain": "logistics",
+      "file": "libraries/seed4/logistics.json",
+      "original_json_sha256": "cd6ddce3888d9457f507f3dd2903896912b999393b0fc4b621d30a0f83d947a6",
+      "seed": 4,
+      "sha256": "3d97e0e4ae9c537adf3c3084286619c27040cf8e2e9056c6a07600e72fe037f4",
+      "template_count": 112
+    },
+    {
+      "domain": "miconic",
+      "file": "libraries/seed4/miconic.json",
+      "original_json_sha256": "39ac445d50e6f7f41033ab714fdf644bcc64ed7c4769cce66fbaa0c51ac78a6f",
+      "seed": 4,
+      "sha256": "5c4ccf6e33e53e4452ddbfb24e9040cc591806dcbfafe91ebaa79b57e4b232e8",
+      "template_count": 20
+    },
+    {
+      "domain": "numeric-ferry",
+      "file": "libraries/seed4/numeric-ferry.json",
+      "original_json_sha256": "ed4e00da021af0d7ef8484fa65de1136b581d6fda70ebed04f3f1a9a93410165",
+      "seed": 4,
+      "sha256": "175d053ab4511b7a136f8e20bc0b5caacc61906c37995f4a32410e4f57bd59ec",
+      "template_count": 17
+    },
+    {
+      "domain": "numeric-miconic",
+      "file": "libraries/seed4/numeric-miconic.json",
+      "original_json_sha256": "daedec3a8a5be669459cfcfbe3b16d6ce0d985030dac567bad7477f9597f9835",
+      "seed": 4,
+      "sha256": "094b57f918883b155d271c5c6c78fae18cda207726d8970954877e8aa10de110",
+      "template_count": 26
+    },
+    {
+      "domain": "numeric-minecraft",
+      "file": "libraries/seed4/numeric-minecraft.json",
+      "original_json_sha256": "49e059dd84dad79f61c47c1a6620e9a8a5c7e19729b2d0589eb6faf6f940d605",
+      "seed": 4,
+      "sha256": "fa8945d0c28e989a0e752d7fb75fb67fffd8286a74abf08e30140c570fdb4c55",
+      "template_count": 22
+    },
+    {
+      "domain": "numeric-transport",
+      "file": "libraries/seed4/numeric-transport.json",
+      "original_json_sha256": "d34aa278343ce3efefd5ecb307e103dc3fa6f8e5636462d39223acde4bfc2843",
+      "seed": 4,
+      "sha256": "e12edf1d7c63dcf044a976052d3cb6301d232f5ec751def7a6f3f7c3527dd953",
+      "template_count": 14
+    },
+    {
+      "domain": "rovers",
+      "file": "libraries/seed4/rovers.json",
+      "original_json_sha256": "e32ad59301b4abcb61028b3438014e226c153cd9a062eddc4ddf054f6ea5b787",
+      "seed": 4,
+      "sha256": "6060b92bc276e438be029640a6f7ca46fe6d0a5ef03b3a82b911d32a982ec16e",
+      "template_count": 123
+    },
+    {
+      "domain": "satellite",
+      "file": "libraries/seed4/satellite.json",
+      "original_json_sha256": "26f340910b14af9062bf6c146a3e8b2cf41cba142bcd25669789e00f82deee6c",
+      "seed": 4,
+      "sha256": "93719f5e44e28ec17558b74d9f80fd30e0581b24e15835d57ca0e3156eb8525e",
+      "template_count": 37
+    },
+    {
+      "domain": "transport",
+      "file": "libraries/seed4/transport.json",
+      "original_json_sha256": "57b2919a4648a702eb4f752acc5cc60c1168a19daacafe31f1520738c4874d07",
+      "seed": 4,
+      "sha256": "2ef6930ae463b53c500a564d67281044d9624303a48305bff0cf0fe990250a96",
+      "template_count": 16
+    }
+  ],
+  "max_binding_join_attempts_per_goal": 1000000,
+  "max_configurations_per_goal": 10000,
+  "max_seconds_per_goal": 5.0,
+  "reference_commit": "954ec13a9c8423a8c687bf3dfe6cbcd02064bbaf",
+  "reference_sha256": "3febe6b5e40dfde89dee71fd274093d758c9707305ad5be4deabbcb86141b1ec",
+  "schema_version": 1,
+  "scope": "held_out_initial_state_atomic_goal_audit",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "selection": "first instances by frozen full-run test_index, all distinct atomic goals",
+  "source_run": "aaai-paired-72b0604f",
+  "state_scope": "initial world state of each selected held-out instance",
+  "unknown_policy": "unresolved obligations remain unknown; incomplete binding counts are N/A"
+}

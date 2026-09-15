@@ -1,0 +1,7015 @@
+{
+  "domain_name": "rovers",
+  "initial_beliefs": [],
+  "plans": [
+    {
+      "body": [],
+      "context": [
+        "at(X, Y)"
+      ],
+      "plan_name": "at_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "calibrated(X, Y)"
+      ],
+      "plan_name": "calibrated_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "communicated_image_data(X, Y)"
+      ],
+      "plan_name": "communicated_image_data_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "communicated_rock_data(X)"
+      ],
+      "plan_name": "communicated_rock_data_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "communicated_soil_data(X)"
+      ],
+      "plan_name": "communicated_soil_data_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "empty(X)"
+      ],
+      "plan_name": "empty_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "empty"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "full(X)"
+      ],
+      "plan_name": "full_already_true",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "full"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "have_image(X, Y, Z)"
+      ],
+      "plan_name": "have_image_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y",
+          "Z"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "have_rock_analysis(X, Y)"
+      ],
+      "plan_name": "have_rock_analysis_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_rock_analysis"
+      }
+    },
+    {
+      "body": [],
+      "context": [
+        "have_soil_analysis(X, Y)"
+      ],
+      "plan_name": "have_soil_analysis_already_true",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_soil_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Z)",
+        "obj_tp(Z, waypoint)",
+        "Y \\== Z"
+      ],
+      "plan_name": "at_via_navigate",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        }
+      ],
+      "context": [
+        "obj_tp(X, camera)",
+        "obj_tp(Y, rover)",
+        "on_board(X, Y)",
+        "equipped_for_imaging(Y)",
+        "at(Y, A)",
+        "obj_tp(A, waypoint)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, objective)",
+        "visible_from(Z, A)"
+      ],
+      "plan_name": "calibrated_via_calibrate",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X",
+            "Y",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "have_image(Z, X, Y)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "visible(B, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(A, C)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "communicated_image_data_via_communicate_image_data",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "X",
+            "Y",
+            "C",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "have_image(A, X, Y)",
+        "obj_tp(A, rover)",
+        "at(A, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Z, B)",
+        "obj_tp(Z, lander)",
+        "visible(C, B)",
+        "obj_tp(C, waypoint)",
+        "B != C"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_12",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, C)",
+        "visible(C, D)",
+        "obj_tp(D, waypoint)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_13",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "X",
+            "Y",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "have_image(A, X, Y)",
+        "obj_tp(A, rover)",
+        "at(A, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Z, D)",
+        "obj_tp(D, waypoint)",
+        "obj_tp(Z, lander)",
+        "visible(C, D)",
+        "obj_tp(C, waypoint)",
+        "B != C"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_8",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "visible(D, V7)",
+        "obj_tp(V7, waypoint)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_20",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "visible_from(X, D)",
+        "visible(D, V7)",
+        "obj_tp(V7, waypoint)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_23",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(A, C)",
+        "obj_tp(A, lander)",
+        "visible(D, C)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "visible_from(X, D)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_25",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, C)",
+        "visible(C, D)",
+        "obj_tp(D, waypoint)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_26",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, C)",
+        "at_lander(A, C)",
+        "obj_tp(A, lander)",
+        "visible(D, C)",
+        "obj_tp(D, waypoint)",
+        "C != D"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_27",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, C)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)",
+        "obj_tp(V7, waypoint)",
+        "visible(D, V7)",
+        "obj_tp(D, waypoint)",
+        "C != D"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_30",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "C",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible(C, V7)",
+        "obj_tp(V7, waypoint)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_33",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "visible_from(X, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible(V7, V8)",
+        "obj_tp(V8, waypoint)",
+        "at_lander(A, V8)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_35",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, C)",
+        "at_lander(A, C)",
+        "obj_tp(A, lander)",
+        "visible(D, C)",
+        "obj_tp(D, waypoint)",
+        "C != D"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_38",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "at_lander(A, V8)",
+        "obj_tp(A, lander)",
+        "obj_tp(V8, waypoint)",
+        "visible(V7, V8)",
+        "obj_tp(V7, waypoint)",
+        "C != V7",
+        "D != V7"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_42",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(X, V7)",
+        "visible(V7, V8)",
+        "obj_tp(V8, waypoint)",
+        "at_lander(A, V8)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_43",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "visible_from(X, D)",
+        "at_lander(A, V8)",
+        "obj_tp(A, lander)",
+        "obj_tp(V8, waypoint)",
+        "visible(V7, V8)",
+        "obj_tp(V7, waypoint)",
+        "D != V7"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_45",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)",
+        "visible(V7, D)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(X, V7)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_47",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "visible(D, V7)",
+        "obj_tp(V7, waypoint)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_48",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(A, C)",
+        "obj_tp(A, lander)",
+        "visible(D, C)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "visible_from(X, D)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_49",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, C)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)",
+        "obj_tp(V7, waypoint)",
+        "visible(D, V7)",
+        "obj_tp(D, waypoint)",
+        "C != D"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_51",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible(C, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "visible_from(X, D)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_53",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, C)",
+        "at_lander(A, C)",
+        "obj_tp(A, lander)",
+        "visible(D, C)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "visible_from(X, D)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_54",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibrated(Z, B)",
+        "obj_tp(B, rover)",
+        "on_board(Z, B)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)",
+        "visible(V7, D)",
+        "obj_tp(V7, waypoint)",
+        "C != V7",
+        "D != V7"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_55",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, C)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "visible(D, V7)",
+        "obj_tp(V7, waypoint)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_56",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "visible_from(X, D)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)",
+        "visible(V7, D)",
+        "obj_tp(V7, waypoint)",
+        "D != V7"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_57",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)",
+        "visible(V7, D)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(B, V7)",
+        "visible_from(X, V7)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_58",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V8",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "visible_from(X, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)",
+        "visible(V8, V7)",
+        "obj_tp(V8, waypoint)",
+        "D != V8",
+        "V7 != V8"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_61",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V8",
+            "V9"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(X, V7)",
+        "at_lander(A, V9)",
+        "obj_tp(A, lander)",
+        "obj_tp(V9, waypoint)",
+        "visible(V8, V9)",
+        "obj_tp(V8, waypoint)",
+        "D != V8",
+        "V7 != V8"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_62",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible(D, V8)",
+        "obj_tp(V8, waypoint)",
+        "at_lander(A, V8)",
+        "obj_tp(A, lander)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(X, V7)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_63",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V8",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V8",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)",
+        "visible(V8, V7)",
+        "obj_tp(V8, waypoint)",
+        "D != V8",
+        "V7 != V8",
+        "visible_from(X, V8)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_64",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(X, D)",
+        "visible(D, V8)",
+        "obj_tp(V8, waypoint)",
+        "at_lander(A, V8)",
+        "obj_tp(A, lander)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_66",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible(C, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "visible_from(X, D)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_67",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "at_lander(A, V8)",
+        "obj_tp(A, lander)",
+        "obj_tp(V8, waypoint)",
+        "visible(V7, V8)",
+        "obj_tp(V7, waypoint)",
+        "C != V7",
+        "D != V7"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_68",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "visible(D, V8)",
+        "obj_tp(V8, waypoint)",
+        "at_lander(A, V8)",
+        "obj_tp(A, lander)",
+        "visible_from(X, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_69",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)",
+        "visible(V7, D)",
+        "obj_tp(V7, waypoint)",
+        "C != V7",
+        "D != V7"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_71",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V8",
+            "V9"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "visible_from(X, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "at_lander(A, V9)",
+        "obj_tp(A, lander)",
+        "obj_tp(V9, waypoint)",
+        "visible(V8, V9)",
+        "obj_tp(V8, waypoint)",
+        "D != V8",
+        "V7 != V8"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_74",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "B",
+            "D",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X",
+            "Y",
+            "C",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, camera)",
+        "supports(Z, Y)",
+        "on_board(Z, B)",
+        "obj_tp(B, rover)",
+        "equipped_for_imaging(B)",
+        "at(B, C)",
+        "obj_tp(C, waypoint)",
+        "visible(C, V7)",
+        "obj_tp(V7, waypoint)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)",
+        "visible_from(X, D)",
+        "obj_tp(D, waypoint)",
+        "C != D"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_76",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, D)",
+        "visible(D, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(X, V7)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_79",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(X, D)",
+        "visible(D, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(B, V7)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_80",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V8",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V8",
+            "V9"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(X, V8)",
+        "obj_tp(V8, waypoint)",
+        "D != V8",
+        "V7 != V8",
+        "visible(V8, V9)",
+        "obj_tp(V9, waypoint)",
+        "at_lander(A, V9)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_81",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V8",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V8",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)",
+        "visible(V8, D)",
+        "obj_tp(V8, waypoint)",
+        "D != V8",
+        "visible_from(X, V8)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "V7 != V8"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_82",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible(D, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(B, V7)",
+        "visible_from(X, V7)",
+        "at_lander(A, V7)",
+        "obj_tp(A, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_84",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(X, D)",
+        "at_lander(A, D)",
+        "obj_tp(A, lander)",
+        "visible(V7, D)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(B, V7)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_85",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V8",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V8",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "V7",
+            "V9"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible(V7, V9)",
+        "obj_tp(V9, waypoint)",
+        "at_lander(A, V9)",
+        "obj_tp(A, lander)",
+        "visible_from(X, V8)",
+        "obj_tp(V8, waypoint)",
+        "D != V8",
+        "V7 != V8"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_86",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "D",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "B",
+            "V7"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V7",
+            "V8"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "V8",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        },
+        {
+          "arguments": [
+            "C",
+            "V8",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "C",
+            "A",
+            "X",
+            "Y",
+            "D",
+            "V9"
+          ],
+          "kind": "action",
+          "symbol": "communicate_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(Z, Y)",
+        "obj_tp(Z, camera)",
+        "calibration_target(Z, B)",
+        "obj_tp(B, objective)",
+        "on_board(Z, C)",
+        "obj_tp(C, rover)",
+        "equipped_for_imaging(C)",
+        "at(C, D)",
+        "obj_tp(D, waypoint)",
+        "visible(D, V9)",
+        "obj_tp(V9, waypoint)",
+        "at_lander(A, V9)",
+        "obj_tp(A, lander)",
+        "visible_from(B, V7)",
+        "obj_tp(V7, waypoint)",
+        "D != V7",
+        "visible_from(X, V8)",
+        "obj_tp(V8, waypoint)",
+        "D != V8",
+        "V7 != V8"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_87",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "have_rock_analysis(Z, X)",
+        "visible(X, A)",
+        "obj_tp(A, waypoint)",
+        "at_lander(Y, A)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_1",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "have_rock_analysis(Z, X)",
+        "obj_tp(Z, rover)",
+        "at(Z, A)",
+        "obj_tp(A, waypoint)",
+        "visible(A, X)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_5",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "have_rock_analysis(Z, X)",
+        "obj_tp(Z, rover)",
+        "at(Z, A)",
+        "obj_tp(A, waypoint)",
+        "visible(A, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_7",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)",
+        "visible(X, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_11",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "have_rock_analysis(Z, X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(A, X)",
+        "obj_tp(A, waypoint)",
+        "A != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_15",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "have_rock_analysis(Z, X)",
+        "at_lander(Y, B)",
+        "obj_tp(B, waypoint)",
+        "obj_tp(Y, lander)",
+        "visible(A, B)",
+        "obj_tp(A, waypoint)",
+        "A != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_16",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)",
+        "visible(X, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_17",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)",
+        "at_lander(Y, C)",
+        "obj_tp(C, waypoint)",
+        "obj_tp(Y, lander)",
+        "visible(B, C)",
+        "obj_tp(B, waypoint)",
+        "B != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_19",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)",
+        "visible(B, X)",
+        "obj_tp(B, waypoint)",
+        "B != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_21",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "visible(X, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at(Z, B)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_24",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "visible(X, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(Y, C)",
+        "obj_tp(Y, lander)",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_31",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)",
+        "visible(C, B)",
+        "obj_tp(C, waypoint)",
+        "B != C",
+        "C != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_37",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "visible(B, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(Y, C)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_40",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(B, X)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at(Z, B)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_50",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(C, X)",
+        "obj_tp(C, waypoint)",
+        "C != X",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != C",
+        "B != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_52",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at_lander(Y, D)",
+        "obj_tp(D, waypoint)",
+        "obj_tp(Y, lander)",
+        "visible(C, D)",
+        "obj_tp(C, waypoint)",
+        "B != C",
+        "C != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_59",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "visible(X, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(Y, C)",
+        "obj_tp(Y, lander)",
+        "equipped_for_rock_analysis(Z)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_60",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "equipped_for_rock_analysis(Z)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)",
+        "visible(B, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(Y, C)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_70",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(C, X)",
+        "obj_tp(C, waypoint)",
+        "C != X",
+        "equipped_for_rock_analysis(Z)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != C",
+        "B != X",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_73",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "equipped_for_rock_analysis(Z)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)",
+        "at_lander(Y, D)",
+        "obj_tp(D, waypoint)",
+        "obj_tp(Y, lander)",
+        "visible(C, D)",
+        "obj_tp(C, waypoint)",
+        "B != C",
+        "C != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_78",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_rock_sample(X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(B, X)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at(Z, B)",
+        "obj_tp(Z, rover)",
+        "equipped_for_rock_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_83",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "have_soil_analysis(Y, X)",
+        "obj_tp(Y, rover)",
+        "at(Y, A)",
+        "obj_tp(A, waypoint)",
+        "visible(A, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Z, B)",
+        "obj_tp(Z, lander)"
+      ],
+      "plan_name": "communicated_soil_data_via_communicate_soil_data",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "have_soil_analysis(Z, X)",
+        "obj_tp(Z, rover)",
+        "at(Z, A)",
+        "obj_tp(A, waypoint)",
+        "visible(A, X)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_2",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "have_soil_analysis(Z, X)",
+        "visible(X, A)",
+        "obj_tp(A, waypoint)",
+        "at_lander(Y, A)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_6",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)",
+        "visible(X, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_10",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "have_soil_analysis(Z, X)",
+        "at_lander(Y, B)",
+        "obj_tp(B, waypoint)",
+        "obj_tp(Y, lander)",
+        "visible(A, B)",
+        "obj_tp(A, waypoint)",
+        "A != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_14",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "have_soil_analysis(Z, X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(A, X)",
+        "obj_tp(A, waypoint)",
+        "A != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_9",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)",
+        "visible(B, X)",
+        "obj_tp(B, waypoint)",
+        "B != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_18",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "visible(X, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(Y, C)",
+        "obj_tp(Y, lander)",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_22",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)",
+        "visible(X, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_28",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "visible(X, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at(Z, B)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_29",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "at(Z, X)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)",
+        "at_lander(Y, C)",
+        "obj_tp(C, waypoint)",
+        "obj_tp(Y, lander)",
+        "visible(B, C)",
+        "obj_tp(B, waypoint)",
+        "B != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_32",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at_lander(Y, B)",
+        "obj_tp(Y, lander)",
+        "visible(C, B)",
+        "obj_tp(C, waypoint)",
+        "B != C",
+        "C != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_34",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "visible(B, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(Y, C)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_36",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(C, X)",
+        "obj_tp(C, waypoint)",
+        "C != X",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != C",
+        "B != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_39",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "visible(X, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(Y, C)",
+        "obj_tp(Y, lander)",
+        "equipped_for_soil_analysis(Z)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_41",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(B, X)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at(Z, B)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "empty(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_44",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "empty(A)",
+        "obj_tp(A, store)",
+        "store_of(A, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at_lander(Y, D)",
+        "obj_tp(D, waypoint)",
+        "obj_tp(Y, lander)",
+        "visible(C, D)",
+        "obj_tp(C, waypoint)",
+        "B != C",
+        "C != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_46",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(B, X)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "at(Z, B)",
+        "obj_tp(Z, rover)",
+        "equipped_for_soil_analysis(Z)",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_65",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "D"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "equipped_for_soil_analysis(Z)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)",
+        "at_lander(Y, D)",
+        "obj_tp(D, waypoint)",
+        "obj_tp(Y, lander)",
+        "visible(C, D)",
+        "obj_tp(C, waypoint)",
+        "B != C",
+        "C != X"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_72",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "C",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "at_lander(Y, X)",
+        "obj_tp(Y, lander)",
+        "visible(C, X)",
+        "obj_tp(C, waypoint)",
+        "C != X",
+        "equipped_for_soil_analysis(Z)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != C",
+        "B != X",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_75",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "navigate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "communicate_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "at_soil_sample(X)",
+        "equipped_for_soil_analysis(Z)",
+        "obj_tp(Z, rover)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "B != X",
+        "store_of(A, Z)",
+        "obj_tp(A, store)",
+        "full(A)",
+        "visible(B, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(Y, C)",
+        "obj_tp(Y, lander)"
+      ],
+      "plan_name": "moose_reduced_rovers_rule_77",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, store)",
+        "full(X)",
+        "store_of(X, Y)",
+        "obj_tp(Y, rover)"
+      ],
+      "plan_name": "empty_via_drop",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "empty"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        }
+      ],
+      "context": [
+        "obj_tp(X, store)",
+        "empty(X)",
+        "store_of(X, Y)",
+        "obj_tp(Y, rover)",
+        "equipped_for_rock_analysis(Y)",
+        "at(Y, Z)",
+        "obj_tp(Z, waypoint)",
+        "at_rock_sample(Z)"
+      ],
+      "plan_name": "full_via_sample_rock",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "full"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        }
+      ],
+      "context": [
+        "obj_tp(X, store)",
+        "empty(X)",
+        "store_of(X, Y)",
+        "obj_tp(Y, rover)",
+        "equipped_for_soil_analysis(Y)",
+        "at(Y, Z)",
+        "obj_tp(Z, waypoint)",
+        "at_soil_sample(Z)"
+      ],
+      "plan_name": "full_via_sample_soil",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "full"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "A",
+            "Y",
+            "B",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, objective)",
+        "obj_tp(Z, mode)",
+        "equipped_for_imaging(X)",
+        "at(X, A)",
+        "obj_tp(A, waypoint)",
+        "visible_from(Y, A)",
+        "calibrated(B, X)",
+        "obj_tp(B, camera)",
+        "on_board(B, X)",
+        "supports(B, Z)"
+      ],
+      "plan_name": "have_image_via_take_image",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y",
+          "Z"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Y)",
+        "at_rock_sample(Y)",
+        "equipped_for_rock_analysis(X)",
+        "store_of(Z, X)",
+        "obj_tp(Z, store)",
+        "empty(Z)"
+      ],
+      "plan_name": "have_rock_analysis_via_sample_rock",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_rock_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sample_rock"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Y)",
+        "at_rock_sample(Y)",
+        "equipped_for_rock_analysis(X)",
+        "store_of(Z, X)",
+        "obj_tp(Z, store)",
+        "full(Z)",
+        "store_of(Z, A)",
+        "obj_tp(A, rover)"
+      ],
+      "plan_name": "have_rock_analysis_via_drop_then_sample_rock",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_rock_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Y)",
+        "at_soil_sample(Y)",
+        "equipped_for_soil_analysis(X)",
+        "store_of(Z, X)",
+        "obj_tp(Z, store)",
+        "empty(Z)"
+      ],
+      "plan_name": "have_soil_analysis_via_sample_soil",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_soil_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "sample_soil"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Y)",
+        "at_soil_sample(Y)",
+        "equipped_for_soil_analysis(X)",
+        "store_of(Z, X)",
+        "obj_tp(Z, store)",
+        "full(Z)",
+        "store_of(Z, A)",
+        "obj_tp(A, rover)"
+      ],
+      "plan_name": "have_soil_analysis_via_drop_then_sample_soil",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_soil_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, camera)",
+        "obj_tp(Y, rover)",
+        "on_board(X, Y)",
+        "equipped_for_imaging(Y)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, objective)",
+        "visible_from(Z, A)",
+        "obj_tp(A, waypoint)",
+        "not at(Y, A)"
+      ],
+      "plan_name": "calibrated_prepare_at_Y_A",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "communicated_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "supports(V8, Y)",
+        "on_board(V8, Z)",
+        "obj_tp(Z, rover)",
+        "equipped_for_imaging(Z)",
+        "not have_image(Z, X, Y)",
+        "at(Z, B)",
+        "obj_tp(B, waypoint)",
+        "visible(B, C)",
+        "obj_tp(C, waypoint)",
+        "at_lander(A, C)",
+        "obj_tp(A, lander)",
+        "visible_from(X, V7)"
+      ],
+      "plan_name": "communicated_image_data_prepare_have_image_Z_X_Y",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "B"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "communicated_image_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, objective)",
+        "obj_tp(Y, mode)",
+        "have_image(Z, X, Y)",
+        "obj_tp(Z, rover)",
+        "equipped_for_imaging(Z)",
+        "on_board(V8, Z)",
+        "supports(V8, Y)",
+        "visible_from(X, V7)",
+        "at_lander(A, C)",
+        "obj_tp(A, lander)",
+        "obj_tp(C, waypoint)",
+        "visible(B, C)",
+        "obj_tp(B, waypoint)",
+        "not at(Z, B)"
+      ],
+      "plan_name": "communicated_image_data_prepare_at_Z_B",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_image_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_rock_analysis"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "communicated_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "equipped_for_rock_analysis(Y)",
+        "obj_tp(Y, rover)",
+        "not have_rock_analysis(Y, X)",
+        "at(Y, A)",
+        "obj_tp(A, waypoint)",
+        "store_of(D, Y)",
+        "visible(A, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Z, B)",
+        "obj_tp(Z, lander)"
+      ],
+      "plan_name": "communicated_rock_data_prepare_have_rock_analysis_Y_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "communicated_rock_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "have_rock_analysis(Y, X)",
+        "obj_tp(Y, rover)",
+        "equipped_for_rock_analysis(Y)",
+        "store_of(D, Y)",
+        "at_lander(Z, B)",
+        "obj_tp(B, waypoint)",
+        "obj_tp(Z, lander)",
+        "visible(A, B)",
+        "obj_tp(A, waypoint)",
+        "not at(Y, A)"
+      ],
+      "plan_name": "communicated_rock_data_prepare_at_Y_A",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_rock_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_soil_analysis"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "communicated_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "equipped_for_soil_analysis(Y)",
+        "obj_tp(Y, rover)",
+        "not have_soil_analysis(Y, X)",
+        "at(Y, A)",
+        "obj_tp(A, waypoint)",
+        "store_of(D, Y)",
+        "visible(A, B)",
+        "obj_tp(B, waypoint)",
+        "at_lander(Z, B)",
+        "obj_tp(Z, lander)"
+      ],
+      "plan_name": "communicated_soil_data_prepare_have_soil_analysis_Y_X",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "communicated_soil_data"
+        }
+      ],
+      "context": [
+        "obj_tp(X, waypoint)",
+        "have_soil_analysis(Y, X)",
+        "obj_tp(Y, rover)",
+        "equipped_for_soil_analysis(Y)",
+        "store_of(D, Y)",
+        "at_lander(Z, B)",
+        "obj_tp(B, waypoint)",
+        "obj_tp(Z, lander)",
+        "visible(A, B)",
+        "obj_tp(A, waypoint)",
+        "not at(Y, A)"
+      ],
+      "plan_name": "communicated_soil_data_prepare_at_Y_A",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "communicated_soil_data"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "full"
+        }
+      ],
+      "context": [
+        "obj_tp(X, store)",
+        "empty(X)",
+        "store_of(X, B)",
+        "store_of(X, Y)",
+        "obj_tp(Y, rover)",
+        "equipped_for_soil_analysis(Y)",
+        "at_soil_sample(Z)",
+        "obj_tp(Z, waypoint)",
+        "not at(Y, Z)"
+      ],
+      "plan_name": "full_prepare_at_Y_Z",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "full"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "full"
+        }
+      ],
+      "context": [
+        "obj_tp(X, store)",
+        "empty(X)",
+        "store_of(X, B)",
+        "store_of(X, Y)",
+        "obj_tp(Y, rover)",
+        "equipped_for_rock_analysis(Y)",
+        "at_rock_sample(Z)",
+        "obj_tp(Z, waypoint)",
+        "not at(Y, Z)"
+      ],
+      "plan_name": "full_prepare_at_Y_Z_2",
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "full"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, objective)",
+        "obj_tp(Z, mode)",
+        "equipped_for_imaging(X)",
+        "on_board(B, X)",
+        "obj_tp(B, camera)",
+        "supports(B, Z)",
+        "not calibrated(B, X)",
+        "calibration_target(B, C)",
+        "visible_from(C, D)",
+        "visible_from(Y, A)",
+        "obj_tp(A, waypoint)"
+      ],
+      "plan_name": "have_image_prepare_calibrated_B_X",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y",
+          "Z"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, objective)",
+        "obj_tp(Z, mode)",
+        "equipped_for_imaging(X)",
+        "on_board(B, X)",
+        "obj_tp(B, camera)",
+        "supports(B, Z)",
+        "calibration_target(B, C)",
+        "visible_from(C, D)",
+        "visible_from(Y, A)",
+        "obj_tp(A, waypoint)",
+        "not at(X, A)"
+      ],
+      "plan_name": "have_image_prepare_at_X_A",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y",
+          "Z"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_rock_analysis"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "not at(X, Y)"
+      ],
+      "plan_name": "have_rock_analysis_prepare_at_X_Y",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_rock_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "full"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_rock_analysis"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Y)",
+        "at_rock_sample(Y)",
+        "equipped_for_rock_analysis(X)",
+        "store_of(Z, X)",
+        "obj_tp(Z, store)",
+        "not full(Z)",
+        "store_of(Z, A)",
+        "obj_tp(A, rover)"
+      ],
+      "plan_name": "have_rock_analysis_prepare_full_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_rock_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "empty"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_rock_analysis"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Y)",
+        "at_rock_sample(Y)",
+        "equipped_for_rock_analysis(X)",
+        "store_of(Z, X)",
+        "obj_tp(Z, store)",
+        "not empty(Z)",
+        "store_of(Z, B)"
+      ],
+      "plan_name": "have_rock_analysis_prepare_empty_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_rock_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_soil_analysis"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "not at(X, Y)"
+      ],
+      "plan_name": "have_soil_analysis_prepare_at_X_Y",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_soil_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "full"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_soil_analysis"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Y)",
+        "at_soil_sample(Y)",
+        "equipped_for_soil_analysis(X)",
+        "store_of(Z, X)",
+        "obj_tp(Z, store)",
+        "not full(Z)",
+        "store_of(Z, A)",
+        "obj_tp(A, rover)"
+      ],
+      "plan_name": "have_soil_analysis_prepare_full_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_soil_analysis"
+      }
+    },
+    {
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "empty"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_soil_analysis"
+        }
+      ],
+      "context": [
+        "obj_tp(X, rover)",
+        "obj_tp(Y, waypoint)",
+        "at(X, Y)",
+        "at_soil_sample(Y)",
+        "equipped_for_soil_analysis(X)",
+        "store_of(Z, X)",
+        "obj_tp(Z, store)",
+        "not empty(Z)",
+        "store_of(Z, B)"
+      ],
+      "plan_name": "have_soil_analysis_prepare_empty_Z",
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_soil_analysis"
+      }
+    }
+  ]
+}
