@@ -1,0 +1,113 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.3755907919839956,
+  "case_index": 135,
+  "configuration_count": 3,
+  "correctness": {
+    "fail": 2,
+    "pass": 1,
+    "total": 3,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 0.3333333333333333,
+    "upper": 0.3333333333333333
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "logistics",
+  "goal": {
+    "arguments": [
+      "p5",
+      "l0-1"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "X": "p5",
+        "Y": "l0-1"
+      },
+      "plan": "at_already_true",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l0-0",
+        "B": "c0",
+        "C": "t0",
+        "X": "p5",
+        "Y": "l0-1",
+        "Z": "t0"
+      },
+      "plan": "at_prepare_in_X_C",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "l0-0",
+        "B": "c0",
+        "C": "a0",
+        "X": "p5",
+        "Y": "l0-1",
+        "Z": "t0"
+      },
+      "plan": "at_prepare_in_X_C_2",
+      "status": "fail"
+    }
+  ],
+  "problem": "src/domains/logistics/test/p0_03.pddl",
+  "reason": null,
+  "request_count": 3,
+  "return_count": 1,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 1,
+  "verification_seconds": 2.0583043806254864e-05,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "p5"
+            ],
+            [
+              "Y",
+              "l0-1"
+            ]
+          ],
+          "body": [],
+          "goal": {
+            "arguments": [
+              "p5",
+              "l0-1"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_already_true"
+        },
+        "children": [],
+        "end_state_sha256": "09bc724e6e206764678290bbd7de414b86eb38f63876608083bda7d187a80575",
+        "start_state_sha256": "09bc724e6e206764678290bbd7de414b86eb38f63876608083bda7d187a80575"
+      }
+    ],
+    "roots": [
+      0,
+      0,
+      null,
+      null
+    ]
+  },
+  "witnesses_replayed": true
+}

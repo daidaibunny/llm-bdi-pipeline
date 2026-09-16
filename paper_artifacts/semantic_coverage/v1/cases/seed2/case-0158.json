@@ -1,0 +1,592 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.016705374990124255,
+  "case_index": 158,
+  "configuration_count": 65,
+  "correctness": {
+    "fail": 0,
+    "pass": 4,
+    "total": 4,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "rovers",
+  "goal": {
+    "arguments": [
+      "waypoint2"
+    ],
+    "symbol": "communicated_soil_data"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "rover1store",
+        "B": "waypoint1",
+        "X": "waypoint2",
+        "Y": "general",
+        "Z": "rover1"
+      },
+      "plan": "moose_reduced_rovers_rule_16",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "rover1store",
+        "B": "waypoint3",
+        "C": "waypoint1",
+        "X": "waypoint2",
+        "Y": "general",
+        "Z": "rover1"
+      },
+      "plan": "moose_reduced_rovers_rule_32",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "rover1store",
+        "B": "waypoint4",
+        "C": "waypoint1",
+        "X": "waypoint2",
+        "Y": "general",
+        "Z": "rover1"
+      },
+      "plan": "moose_reduced_rovers_rule_32",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "waypoint2",
+        "B": "waypoint1",
+        "D": "rover1store",
+        "X": "waypoint2",
+        "Y": "rover1",
+        "Z": "general"
+      },
+      "plan": "communicated_soil_data_prepare_have_soil_analysis_Y_X",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/rovers/test/p0_01.pddl",
+  "reason": null,
+  "request_count": 13,
+  "return_count": 10,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 2,
+  "verification_seconds": 0.000940375030040741,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "waypoint2"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "rover1store"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "rover1"
+            ],
+            [
+              "Z",
+              "general"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint2"
+                ],
+                "symbol": "have_soil_analysis"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "waypoint2"
+                ],
+                "symbol": "communicated_soil_data"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_soil_data"
+          },
+          "name": "communicated_soil_data_prepare_have_soil_analysis_Y_X"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "2b0a06932ffc41699ea1a1b6ad9f5593b107641721256a5f632c8c6aa3c6ce8e",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "waypoint2"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "rover1"
+            ],
+            [
+              "Z",
+              "general"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "waypoint2",
+                  "waypoint2",
+                  "waypoint1"
+                ],
+                "symbol": "communicate_soil_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_soil_data"
+          },
+          "name": "communicated_soil_data_via_communicate_soil_data"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "waypoint2",
+                "waypoint2",
+                "waypoint1"
+              ],
+              "symbol": "communicate_soil_data"
+            }
+          }
+        ],
+        "end_state_sha256": "2b0a06932ffc41699ea1a1b6ad9f5593b107641721256a5f632c8c6aa3c6ce8e",
+        "start_state_sha256": "19708827d2363f8dba3e4e482b3e09a9fdf229a711432f756b5e18fe5136b2ee"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "rover1"
+            ],
+            [
+              "Y",
+              "waypoint2"
+            ],
+            [
+              "Z",
+              "rover1store"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "rover1store",
+                  "waypoint2"
+                ],
+                "symbol": "sample_soil"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "rover1",
+              "waypoint2"
+            ],
+            "symbol": "have_soil_analysis"
+          },
+          "name": "have_soil_analysis_via_sample_soil"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "rover1store",
+                "waypoint2"
+              ],
+              "symbol": "sample_soil"
+            }
+          }
+        ],
+        "end_state_sha256": "19708827d2363f8dba3e4e482b3e09a9fdf229a711432f756b5e18fe5136b2ee",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "rover1store"
+            ],
+            [
+              "B",
+              "waypoint4"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "general"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "rover1store",
+                  "waypoint2"
+                ],
+                "symbol": "sample_soil"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint2",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "waypoint2",
+                  "waypoint4",
+                  "waypoint1"
+                ],
+                "symbol": "communicate_soil_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_soil_data"
+          },
+          "name": "moose_reduced_rovers_rule_32"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "rover1store",
+                "waypoint2"
+              ],
+              "symbol": "sample_soil"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint2",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "waypoint2",
+                "waypoint4",
+                "waypoint1"
+              ],
+              "symbol": "communicate_soil_data"
+            }
+          }
+        ],
+        "end_state_sha256": "bca4a91fef855fc8e9e629f0ad6e09f1e8686cf1dd4072ee56728a396c381e46",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "rover1store"
+            ],
+            [
+              "B",
+              "waypoint3"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "general"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "rover1store",
+                  "waypoint2"
+                ],
+                "symbol": "sample_soil"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint2",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "waypoint2",
+                  "waypoint3",
+                  "waypoint1"
+                ],
+                "symbol": "communicate_soil_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_soil_data"
+          },
+          "name": "moose_reduced_rovers_rule_32"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "rover1store",
+                "waypoint2"
+              ],
+              "symbol": "sample_soil"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint2",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "waypoint2",
+                "waypoint3",
+                "waypoint1"
+              ],
+              "symbol": "communicate_soil_data"
+            }
+          }
+        ],
+        "end_state_sha256": "65bbaa931f492b4dfe48171d26c3a784b0d73c5af5a1ee55c6e3d98e25151f65",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "rover1store"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "general"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "rover1store",
+                  "waypoint2"
+                ],
+                "symbol": "sample_soil"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "waypoint2",
+                  "waypoint2",
+                  "waypoint1"
+                ],
+                "symbol": "communicate_soil_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_soil_data"
+          },
+          "name": "moose_reduced_rovers_rule_16"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "rover1store",
+                "waypoint2"
+              ],
+              "symbol": "sample_soil"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "waypoint2",
+                "waypoint2",
+                "waypoint1"
+              ],
+              "symbol": "communicate_soil_data"
+            }
+          }
+        ],
+        "end_state_sha256": "2b0a06932ffc41699ea1a1b6ad9f5593b107641721256a5f632c8c6aa3c6ce8e",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      }
+    ],
+    "roots": [
+      5,
+      5,
+      4,
+      3,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

@@ -1,0 +1,2548 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.10324562498135492,
+  "case_index": 23,
+  "configuration_count": 371,
+  "correctness": {
+    "fail": 0,
+    "pass": 7,
+    "total": 7,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "blocksworld-tower",
+  "goal": {
+    "arguments": [
+      "g",
+      "b"
+    ],
+    "symbol": "on"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "h",
+        "B": "c",
+        "C": "i",
+        "D": "f",
+        "X": "g",
+        "Y": "b",
+        "Z": "c"
+      },
+      "plan": "moose_reduced_blocksworld_tower_rule_131",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "h",
+        "B": "k",
+        "C": "i",
+        "D": "f",
+        "X": "g",
+        "Y": "b",
+        "Z": "c"
+      },
+      "plan": "moose_reduced_blocksworld_tower_rule_131",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "h",
+        "B": "i",
+        "C": "f",
+        "X": "g",
+        "Y": "b",
+        "Z": "c"
+      },
+      "plan": "moose_reduced_blocksworld_tower_rule_139",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "g",
+        "Y": "b"
+      },
+      "plan": "on_prepare_clear_X",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "g",
+        "Y": "b"
+      },
+      "plan": "on_prepare_clear_Y",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "g",
+        "Y": "b"
+      },
+      "plan": "on_prepare_holding_X",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "g",
+        "Y": "b"
+      },
+      "plan": "on_prepare_ontable_X",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/blocksworld-tower/test/instance-26.pddl",
+  "reason": null,
+  "request_count": 48,
+  "return_count": 69,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 4,
+  "verification_seconds": 0.0018725830013863742,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "ontable"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_ontable_X"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "i"
+            ],
+            [
+              "B",
+              "f"
+            ],
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ],
+            [
+              "Z",
+              "h"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "h",
+                  "i"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i",
+                  "f"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f",
+                  "b"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_tower_rule_61"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "h",
+                "i"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i",
+                "f"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f",
+                "b"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "b"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "38121caf4d8d0338701429d33e3b968dc5cda1a1be4bed858bd9a681f3eb2647"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "ontable"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g"
+            ],
+            "symbol": "ontable"
+          },
+          "name": "ontable_prepare_clear_X"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 3
+          }
+        ],
+        "end_state_sha256": "38121caf4d8d0338701429d33e3b968dc5cda1a1be4bed858bd9a681f3eb2647",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "h"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "h"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g"
+            ],
+            "symbol": "ontable"
+          },
+          "name": "ontable_via_unstack_then_put-down"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "h"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g"
+              ],
+              "symbol": "put-down"
+            }
+          }
+        ],
+        "end_state_sha256": "38121caf4d8d0338701429d33e3b968dc5cda1a1be4bed858bd9a681f3eb2647",
+        "start_state_sha256": "ec809216364e999c540330f8c535875f7df80a1887bacc29c2d05931cae63298"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "c"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "c",
+                  "g"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "c"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_put-down"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "c",
+                "g"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "c"
+              ],
+              "symbol": "put-down"
+            }
+          }
+        ],
+        "end_state_sha256": "ec809216364e999c540330f8c535875f7df80a1887bacc29c2d05931cae63298",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "holding"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_holding_X"
+        },
+        "children": [
+          {
+            "proof": 7
+          },
+          {
+            "proof": 6
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "h"
+            ],
+            [
+              "B",
+              "i"
+            ],
+            [
+              "C",
+              "f"
+            ],
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ],
+            [
+              "Z",
+              "c"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "c"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h",
+                  "i"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i",
+                  "f"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f",
+                  "b"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "c"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_tower_rule_73"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "c"
+              ],
+              "symbol": "stack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h",
+                "i"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i",
+                "f"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f",
+                "b"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "c"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "b"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "fd9ec84c700e6d2e1ebddce730c84d1dea29b1fa9e606b4400d009690ebb5123"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "holding"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g"
+            ],
+            "symbol": "holding"
+          },
+          "name": "holding_prepare_clear_X"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 8
+          }
+        ],
+        "end_state_sha256": "fd9ec84c700e6d2e1ebddce730c84d1dea29b1fa9e606b4400d009690ebb5123",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "h"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "h"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g"
+            ],
+            "symbol": "holding"
+          },
+          "name": "holding_via_unstack"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "h"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "fd9ec84c700e6d2e1ebddce730c84d1dea29b1fa9e606b4400d009690ebb5123",
+        "start_state_sha256": "ec809216364e999c540330f8c535875f7df80a1887bacc29c2d05931cae63298"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 11
+          },
+          {
+            "proof": 10
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_via_pick-up_then_stack"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "g"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "b"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "e67cb6649af292b0fc985173236f7ff628207f4567ff2698c13c967fd04057bd"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b"
+            ],
+            [
+              "Y",
+              "f"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 13
+          },
+          {
+            "proof": 12
+          }
+        ],
+        "end_state_sha256": "e67cb6649af292b0fc985173236f7ff628207f4567ff2698c13c967fd04057bd",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b"
+            ],
+            [
+              "Y",
+              "f"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "f",
+                  "b"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_put-down"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "f",
+                "b"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f"
+              ],
+              "symbol": "put-down"
+            }
+          }
+        ],
+        "end_state_sha256": "e67cb6649af292b0fc985173236f7ff628207f4567ff2698c13c967fd04057bd",
+        "start_state_sha256": "ed48dfde4a697e0d8198d30f190a6c87dc7add364f61fd368c36fc9d04e1391e"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "f"
+            ],
+            [
+              "Y",
+              "i"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "f"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 15
+          },
+          {
+            "proof": 14
+          }
+        ],
+        "end_state_sha256": "ed48dfde4a697e0d8198d30f190a6c87dc7add364f61fd368c36fc9d04e1391e",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "f"
+            ],
+            [
+              "Y",
+              "i"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "i",
+                  "f"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "f"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_put-down"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "i",
+                "f"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i"
+              ],
+              "symbol": "put-down"
+            }
+          }
+        ],
+        "end_state_sha256": "ed48dfde4a697e0d8198d30f190a6c87dc7add364f61fd368c36fc9d04e1391e",
+        "start_state_sha256": "bd5d7334b22084b575a54c894d782f686cb1acb302a8e5b5a88d67819a3ad630"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "i"
+            ],
+            [
+              "Y",
+              "h"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "i"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 17
+          },
+          {
+            "proof": 16
+          }
+        ],
+        "end_state_sha256": "bd5d7334b22084b575a54c894d782f686cb1acb302a8e5b5a88d67819a3ad630",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "i"
+            ],
+            [
+              "Y",
+              "h"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "h",
+                  "i"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "i"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_put-down"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "h",
+                "i"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h"
+              ],
+              "symbol": "put-down"
+            }
+          }
+        ],
+        "end_state_sha256": "bd5d7334b22084b575a54c894d782f686cb1acb302a8e5b5a88d67819a3ad630",
+        "start_state_sha256": "38121caf4d8d0338701429d33e3b968dc5cda1a1be4bed858bd9a681f3eb2647"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "h"
+            ],
+            [
+              "Y",
+              "g"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "h"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 18
+          }
+        ],
+        "end_state_sha256": "38121caf4d8d0338701429d33e3b968dc5cda1a1be4bed858bd9a681f3eb2647",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "h"
+            ],
+            [
+              "Y",
+              "g"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "h"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "h"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_put-down"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "h"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g"
+              ],
+              "symbol": "put-down"
+            }
+          }
+        ],
+        "end_state_sha256": "38121caf4d8d0338701429d33e3b968dc5cda1a1be4bed858bd9a681f3eb2647",
+        "start_state_sha256": "ec809216364e999c540330f8c535875f7df80a1887bacc29c2d05931cae63298"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_clear_X"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 20
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "c"
+            ],
+            [
+              "B",
+              "i"
+            ],
+            [
+              "C",
+              "f"
+            ],
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ],
+            [
+              "Z",
+              "h"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "h"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "c"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h",
+                  "i"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i",
+                  "f"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f",
+                  "b"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "c"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_tower_rule_98"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "h"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "c"
+              ],
+              "symbol": "stack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h",
+                "i"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i",
+                "f"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f",
+                "b"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "c"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "b"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "ec809216364e999c540330f8c535875f7df80a1887bacc29c2d05931cae63298"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "h"
+            ],
+            [
+              "B",
+              "i"
+            ],
+            [
+              "C",
+              "f"
+            ],
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ],
+            [
+              "Z",
+              "c"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "c",
+                  "g"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "c"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "h"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "c"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h",
+                  "i"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i",
+                  "f"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f",
+                  "b"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "c"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_tower_rule_139"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "c",
+                "g"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "c"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "h"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "c"
+              ],
+              "symbol": "stack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h",
+                "i"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i",
+                "f"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f",
+                "b"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "c"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "b"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "h"
+            ],
+            [
+              "B",
+              "k"
+            ],
+            [
+              "C",
+              "i"
+            ],
+            [
+              "D",
+              "f"
+            ],
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ],
+            [
+              "Z",
+              "c"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "c",
+                  "g"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "c"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "h"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "k"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h",
+                  "i"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i",
+                  "f"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f",
+                  "b"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "k"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_tower_rule_131"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "c",
+                "g"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "c"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "h"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "k"
+              ],
+              "symbol": "stack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h",
+                "i"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i",
+                "f"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f",
+                "b"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "k"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "b"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "h"
+            ],
+            [
+              "B",
+              "c"
+            ],
+            [
+              "C",
+              "i"
+            ],
+            [
+              "D",
+              "f"
+            ],
+            [
+              "X",
+              "g"
+            ],
+            [
+              "Y",
+              "b"
+            ],
+            [
+              "Z",
+              "c"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "c",
+                  "g"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "c"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "h"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "c"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h",
+                  "i"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "h"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i",
+                  "f"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "i"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f",
+                  "b"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f"
+                ],
+                "symbol": "put-down"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "c"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "g",
+                  "b"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "g",
+              "b"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_tower_rule_131"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "c",
+                "g"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "c"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "h"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "c"
+              ],
+              "symbol": "stack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h",
+                "i"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "h"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i",
+                "f"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "i"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f",
+                "b"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f"
+              ],
+              "symbol": "put-down"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "c"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "g",
+                "b"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c570f1773b425e63818346c1f33222d8ffc9b66199359e864f2bd94a1e69993",
+        "start_state_sha256": "781ea30e4e6271535c6546873140c40f0acac92aa57696290961350401667d6c"
+      }
+    ],
+    "roots": [
+      23,
+      23,
+      22,
+      21,
+      19,
+      9,
+      5,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

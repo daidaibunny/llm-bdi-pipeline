@@ -1,0 +1,618 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.0013339580036699772,
+  "case_index": 144,
+  "configuration_count": 46,
+  "correctness": {
+    "fail": 0,
+    "pass": 3,
+    "total": 3,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "numeric-ferry",
+  "goal": {
+    "arguments": [
+      "car2",
+      "loc2"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "N": "4",
+        "X": "car2",
+        "Y": "loc2",
+        "Z": "loc4"
+      },
+      "plan": "moose_reduced_numeric_ferry_rule_5",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "car2",
+        "Y": "loc2"
+      },
+      "plan": "at_prepare_on_X",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "car2",
+        "Y": "loc2",
+        "Z": "loc4"
+      },
+      "plan": "at_prepare_at-ferry_Z",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/numeric-ferry/test/p0_03.pddl",
+  "reason": null,
+  "request_count": 8,
+  "return_count": 8,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 3,
+  "verification_seconds": 0.00023108301684260368,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "car2"
+            ],
+            [
+              "Y",
+              "loc2"
+            ],
+            [
+              "Z",
+              "loc4"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "loc4"
+                ],
+                "symbol": "at-ferry"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "car2",
+                  "loc2"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "car2",
+              "loc2"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_at-ferry_Z"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "1b1bf67b04f32f81c7f4de1ef5150196e33d36a9d7d007365a217de5698f77ba",
+        "start_state_sha256": "83c0c6dc68b713f55a3b8ede9d0318a15a8d35246a1422ad467f1a1bd188d542"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "N",
+              "4"
+            ],
+            [
+              "X",
+              "car2"
+            ],
+            [
+              "Y",
+              "loc2"
+            ],
+            [
+              "Z",
+              "loc4"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "car2",
+                  "loc4"
+                ],
+                "symbol": "board"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "loc4",
+                  "loc2"
+                ],
+                "symbol": "sail"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "car2",
+                  "loc2"
+                ],
+                "symbol": "debark"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "car2",
+              "loc2"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_via_board_then_sail_then_debark"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "car2",
+                "loc4"
+              ],
+              "symbol": "board"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "loc4",
+                "loc2"
+              ],
+              "symbol": "sail"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "car2",
+                "loc2"
+              ],
+              "symbol": "debark"
+            }
+          }
+        ],
+        "end_state_sha256": "1b1bf67b04f32f81c7f4de1ef5150196e33d36a9d7d007365a217de5698f77ba",
+        "start_state_sha256": "527d0de0756e86091f00dbb12807f0e9aaba02b3ffc4273bf3e31e3578a97f9e"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "loc4"
+            ],
+            [
+              "Y",
+              "loc2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "loc2",
+                  "loc4"
+                ],
+                "symbol": "sail"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "loc4"
+            ],
+            "symbol": "at-ferry"
+          },
+          "name": "at-ferry_via_sail"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "loc2",
+                "loc4"
+              ],
+              "symbol": "sail"
+            }
+          }
+        ],
+        "end_state_sha256": "527d0de0756e86091f00dbb12807f0e9aaba02b3ffc4273bf3e31e3578a97f9e",
+        "start_state_sha256": "83c0c6dc68b713f55a3b8ede9d0318a15a8d35246a1422ad467f1a1bd188d542"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "car2"
+            ],
+            [
+              "Y",
+              "loc2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "car2"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "car2",
+                  "loc2"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "car2",
+              "loc2"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_on_X"
+        },
+        "children": [
+          {
+            "proof": 5
+          },
+          {
+            "proof": 4
+          }
+        ],
+        "end_state_sha256": "1b1bf67b04f32f81c7f4de1ef5150196e33d36a9d7d007365a217de5698f77ba",
+        "start_state_sha256": "83c0c6dc68b713f55a3b8ede9d0318a15a8d35246a1422ad467f1a1bd188d542"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "N",
+              "3"
+            ],
+            [
+              "X",
+              "car2"
+            ],
+            [
+              "Y",
+              "loc2"
+            ],
+            [
+              "Z",
+              "loc4"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "loc4",
+                  "loc2"
+                ],
+                "symbol": "sail"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "car2",
+                  "loc2"
+                ],
+                "symbol": "debark"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "car2",
+              "loc2"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_numeric_ferry_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "loc4",
+                "loc2"
+              ],
+              "symbol": "sail"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "car2",
+                "loc2"
+              ],
+              "symbol": "debark"
+            }
+          }
+        ],
+        "end_state_sha256": "1b1bf67b04f32f81c7f4de1ef5150196e33d36a9d7d007365a217de5698f77ba",
+        "start_state_sha256": "87997896419c83e3346fa9643c5b3aec36185f9c88aa14649c8522ebcc1b8356"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "car2"
+            ],
+            [
+              "Y",
+              "loc4"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "loc4"
+                ],
+                "symbol": "at-ferry"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "car2"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "car2"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_at-ferry_Y"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 6
+          }
+        ],
+        "end_state_sha256": "87997896419c83e3346fa9643c5b3aec36185f9c88aa14649c8522ebcc1b8356",
+        "start_state_sha256": "83c0c6dc68b713f55a3b8ede9d0318a15a8d35246a1422ad467f1a1bd188d542"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "N",
+              "4"
+            ],
+            [
+              "X",
+              "car2"
+            ],
+            [
+              "Y",
+              "loc4"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "car2",
+                  "loc4"
+                ],
+                "symbol": "board"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "car2"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_via_board"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "car2",
+                "loc4"
+              ],
+              "symbol": "board"
+            }
+          }
+        ],
+        "end_state_sha256": "87997896419c83e3346fa9643c5b3aec36185f9c88aa14649c8522ebcc1b8356",
+        "start_state_sha256": "527d0de0756e86091f00dbb12807f0e9aaba02b3ffc4273bf3e31e3578a97f9e"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "N",
+              "4"
+            ],
+            [
+              "X",
+              "car2"
+            ],
+            [
+              "Y",
+              "loc2"
+            ],
+            [
+              "Z",
+              "loc4"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "loc2",
+                  "loc4"
+                ],
+                "symbol": "sail"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "car2",
+                  "loc4"
+                ],
+                "symbol": "board"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "loc4",
+                  "loc2"
+                ],
+                "symbol": "sail"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "car2",
+                  "loc2"
+                ],
+                "symbol": "debark"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "car2",
+              "loc2"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_numeric_ferry_rule_5"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "loc2",
+                "loc4"
+              ],
+              "symbol": "sail"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "car2",
+                "loc4"
+              ],
+              "symbol": "board"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "loc4",
+                "loc2"
+              ],
+              "symbol": "sail"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "car2",
+                "loc2"
+              ],
+              "symbol": "debark"
+            }
+          }
+        ],
+        "end_state_sha256": "1b1bf67b04f32f81c7f4de1ef5150196e33d36a9d7d007365a217de5698f77ba",
+        "start_state_sha256": "83c0c6dc68b713f55a3b8ede9d0318a15a8d35246a1422ad467f1a1bd188d542"
+      }
+    ],
+    "roots": [
+      7,
+      7,
+      3,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

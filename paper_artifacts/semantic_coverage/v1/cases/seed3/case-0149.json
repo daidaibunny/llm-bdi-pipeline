@@ -1,0 +1,4292 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.14843279198976234,
+  "case_index": 149,
+  "configuration_count": 4242,
+  "correctness": {
+    "fail": 252,
+    "pass": 0,
+    "total": 252,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 0.0,
+    "upper": 0.0
+  },
+  "coverage": {
+    "fail": 1,
+    "pass": 0,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 0.0,
+    "upper": 0.0
+  },
+  "domain": "numeric-minecraft",
+  "goal": {
+    "arguments": [
+      "0"
+    ],
+    "symbol": "pogo_sticks_to_make"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_15",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell10",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell2",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell3",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell4",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell5",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell7"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell6",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell7",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell10",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell2",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell3",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell4",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell5",
+        "Z": "cell6"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell10"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell2"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell3"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell4"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "cell7",
+        "K": "0",
+        "M": "0",
+        "N": "4",
+        "N0": "0",
+        "Q": "0",
+        "R": "0",
+        "X": "cell0",
+        "Y": "cell6",
+        "Z": "cell5"
+      },
+      "plan": "moose_numeric_numeric_minecraft_rule_16",
+      "status": "fail"
+    }
+  ],
+  "problem": "src/domains/numeric-minecraft/test/p0_01.pddl",
+  "reason": null,
+  "request_count": 1,
+  "return_count": 0,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 3,
+  "verification_seconds": 5.62501372769475e-06,
+  "witnesses": {
+    "nodes": [],
+    "roots": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "witnesses_replayed": true
+}

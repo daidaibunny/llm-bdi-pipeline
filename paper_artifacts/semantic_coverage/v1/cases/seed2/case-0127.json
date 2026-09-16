@@ -1,0 +1,352 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.16830924997339025,
+  "case_index": 127,
+  "configuration_count": 13,
+  "correctness": {
+    "fail": 1,
+    "pass": 3,
+    "total": 4,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 0.75,
+    "upper": 0.75
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "logistics",
+  "goal": {
+    "arguments": [
+      "p2",
+      "l0-0"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "X": "p2",
+        "Y": "l0-0"
+      },
+      "plan": "at_already_true",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l0-0",
+        "B": "a0",
+        "X": "p2",
+        "Y": "l0-0",
+        "Z": "a0"
+      },
+      "plan": "at_prepare_in_X_B_2",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l0-1",
+        "B": "c0",
+        "C": "t0",
+        "X": "p2",
+        "Y": "l0-0",
+        "Z": "t0"
+      },
+      "plan": "at_prepare_in_X_C",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "X": "p2",
+        "Y": "l0-0",
+        "Z": "a0"
+      },
+      "plan": "at_prepare_in_X_Z_2",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/logistics/test/p0_02.pddl",
+  "reason": null,
+  "request_count": 5,
+  "return_count": 3,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 2,
+  "verification_seconds": 0.00018129200907424092,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "p2"
+            ],
+            [
+              "Y",
+              "l0-0"
+            ],
+            [
+              "Z",
+              "a0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p2",
+                  "a0"
+                ],
+                "symbol": "in"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p2",
+                  "l0-0"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p2",
+              "l0-0"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_in_X_Z_2"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "p2"
+            ],
+            [
+              "Y",
+              "l0-0"
+            ],
+            [
+              "Z",
+              "a0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p2",
+                  "a0",
+                  "l0-0"
+                ],
+                "symbol": "unload-airplane"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p2",
+              "l0-0"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_via_unload-airplane"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "p2",
+                "a0",
+                "l0-0"
+              ],
+              "symbol": "unload-airplane"
+            }
+          }
+        ],
+        "end_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93",
+        "start_state_sha256": "997df073aceb96dea4a6a7916a84e46a57c67f68fffdf730793ee25606e1b9a8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "p2"
+            ],
+            [
+              "Y",
+              "a0"
+            ],
+            [
+              "Z",
+              "l0-0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p2",
+                  "a0",
+                  "l0-0"
+                ],
+                "symbol": "load-airplane"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p2",
+              "a0"
+            ],
+            "symbol": "in"
+          },
+          "name": "in_via_load-airplane"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "p2",
+                "a0",
+                "l0-0"
+              ],
+              "symbol": "load-airplane"
+            }
+          }
+        ],
+        "end_state_sha256": "997df073aceb96dea4a6a7916a84e46a57c67f68fffdf730793ee25606e1b9a8",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l0-0"
+            ],
+            [
+              "B",
+              "a0"
+            ],
+            [
+              "X",
+              "p2"
+            ],
+            [
+              "Y",
+              "l0-0"
+            ],
+            [
+              "Z",
+              "a0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p2",
+                  "a0"
+                ],
+                "symbol": "in"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p2",
+                  "l0-0"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p2",
+              "l0-0"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_in_X_B_2"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "p2"
+            ],
+            [
+              "Y",
+              "l0-0"
+            ]
+          ],
+          "body": [],
+          "goal": {
+            "arguments": [
+              "p2",
+              "l0-0"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_already_true"
+        },
+        "children": [],
+        "end_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      }
+    ],
+    "roots": [
+      4,
+      4,
+      3,
+      null,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

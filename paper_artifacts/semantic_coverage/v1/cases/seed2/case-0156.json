@@ -1,0 +1,588 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.017756749992258847,
+  "case_index": 156,
+  "configuration_count": 65,
+  "correctness": {
+    "fail": 0,
+    "pass": 4,
+    "total": 4,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "rovers",
+  "goal": {
+    "arguments": [
+      "waypoint2"
+    ],
+    "symbol": "communicated_rock_data"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "rover1store",
+        "B": "waypoint1",
+        "X": "waypoint2",
+        "Y": "general",
+        "Z": "rover1"
+      },
+      "plan": "moose_reduced_rovers_rule_11",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "rover1store",
+        "B": "waypoint3",
+        "C": "waypoint1",
+        "X": "waypoint2",
+        "Y": "general",
+        "Z": "rover1"
+      },
+      "plan": "moose_reduced_rovers_rule_29",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "rover1store",
+        "B": "waypoint4",
+        "C": "waypoint1",
+        "X": "waypoint2",
+        "Y": "general",
+        "Z": "rover1"
+      },
+      "plan": "moose_reduced_rovers_rule_29",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "waypoint2",
+        "B": "waypoint1",
+        "D": "rover1store",
+        "X": "waypoint2",
+        "Y": "rover1",
+        "Z": "general"
+      },
+      "plan": "communicated_rock_data_prepare_have_rock_analysis_Y_X",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/rovers/test/p0_01.pddl",
+  "reason": null,
+  "request_count": 13,
+  "return_count": 10,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 2,
+  "verification_seconds": 0.0009440829744562507,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "waypoint2"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "rover1store"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "rover1"
+            ],
+            [
+              "Z",
+              "general"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint2"
+                ],
+                "symbol": "have_rock_analysis"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "waypoint2"
+                ],
+                "symbol": "communicated_rock_data"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_rock_data"
+          },
+          "name": "communicated_rock_data_prepare_have_rock_analysis_Y_X"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "955a04b228aa288515a0865e2749223a4ebaeb9fbf4472ea2ddac0e450c6dcd8",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "general"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "waypoint2",
+                  "waypoint2",
+                  "waypoint1"
+                ],
+                "symbol": "communicate_rock_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_rock_data"
+          },
+          "name": "moose_reduced_rovers_rule_1"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "waypoint2",
+                "waypoint2",
+                "waypoint1"
+              ],
+              "symbol": "communicate_rock_data"
+            }
+          }
+        ],
+        "end_state_sha256": "955a04b228aa288515a0865e2749223a4ebaeb9fbf4472ea2ddac0e450c6dcd8",
+        "start_state_sha256": "93c0bdc93a818d9109bfc7db6dcb03f3f6361915b5fe2f0cb8ca9f8897578d6a"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "rover1"
+            ],
+            [
+              "Y",
+              "waypoint2"
+            ],
+            [
+              "Z",
+              "rover1store"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "rover1store",
+                  "waypoint2"
+                ],
+                "symbol": "sample_rock"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "rover1",
+              "waypoint2"
+            ],
+            "symbol": "have_rock_analysis"
+          },
+          "name": "have_rock_analysis_via_sample_rock"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "rover1store",
+                "waypoint2"
+              ],
+              "symbol": "sample_rock"
+            }
+          }
+        ],
+        "end_state_sha256": "93c0bdc93a818d9109bfc7db6dcb03f3f6361915b5fe2f0cb8ca9f8897578d6a",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "rover1store"
+            ],
+            [
+              "B",
+              "waypoint4"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "general"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "rover1store",
+                  "waypoint2"
+                ],
+                "symbol": "sample_rock"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint2",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "waypoint2",
+                  "waypoint4",
+                  "waypoint1"
+                ],
+                "symbol": "communicate_rock_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_rock_data"
+          },
+          "name": "moose_reduced_rovers_rule_29"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "rover1store",
+                "waypoint2"
+              ],
+              "symbol": "sample_rock"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint2",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "waypoint2",
+                "waypoint4",
+                "waypoint1"
+              ],
+              "symbol": "communicate_rock_data"
+            }
+          }
+        ],
+        "end_state_sha256": "59b6c254e61eb2bf4c5fb98c0fe75d098ec285842ea095dbc79b78c7df573024",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "rover1store"
+            ],
+            [
+              "B",
+              "waypoint3"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "general"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "rover1store",
+                  "waypoint2"
+                ],
+                "symbol": "sample_rock"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint2",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "waypoint2",
+                  "waypoint3",
+                  "waypoint1"
+                ],
+                "symbol": "communicate_rock_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_rock_data"
+          },
+          "name": "moose_reduced_rovers_rule_29"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "rover1store",
+                "waypoint2"
+              ],
+              "symbol": "sample_rock"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint2",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "waypoint2",
+                "waypoint3",
+                "waypoint1"
+              ],
+              "symbol": "communicate_rock_data"
+            }
+          }
+        ],
+        "end_state_sha256": "76935612cb10fb6f0577ab7563625b224caa031d65ccda347bff0a4eb5b578f4",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "rover1store"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "waypoint2"
+            ],
+            [
+              "Y",
+              "general"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "rover1store",
+                  "waypoint2"
+                ],
+                "symbol": "sample_rock"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "waypoint2",
+                  "waypoint2",
+                  "waypoint1"
+                ],
+                "symbol": "communicate_rock_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "waypoint2"
+            ],
+            "symbol": "communicated_rock_data"
+          },
+          "name": "moose_reduced_rovers_rule_11"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "rover1store",
+                "waypoint2"
+              ],
+              "symbol": "sample_rock"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "waypoint2",
+                "waypoint2",
+                "waypoint1"
+              ],
+              "symbol": "communicate_rock_data"
+            }
+          }
+        ],
+        "end_state_sha256": "955a04b228aa288515a0865e2749223a4ebaeb9fbf4472ea2ddac0e450c6dcd8",
+        "start_state_sha256": "b9a756002499574ca3cf08799d84d160a35ac33f4ff2adcdb985ea57dafe9fc5"
+      }
+    ],
+    "roots": [
+      5,
+      5,
+      4,
+      3,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

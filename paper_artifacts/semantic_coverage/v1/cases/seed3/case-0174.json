@@ -1,0 +1,1105 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.00745008303783834,
+  "case_index": 174,
+  "configuration_count": 96,
+  "correctness": {
+    "fail": 0,
+    "pass": 5,
+    "total": 5,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "satellite",
+  "goal": {
+    "arguments": [
+      "dir4",
+      "mod1"
+    ],
+    "symbol": "have_image"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "ins2",
+        "B": "sat1",
+        "X": "dir4",
+        "Y": "mod1",
+        "Z": "dir1"
+      },
+      "plan": "moose_reduced_satellite_rule_12",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "dir3",
+        "B": "ins1",
+        "C": "sat2",
+        "X": "dir4",
+        "Y": "mod1",
+        "Z": "dir1"
+      },
+      "plan": "moose_reduced_satellite_rule_13",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "dir1",
+        "B": "ins3",
+        "C": "sat3",
+        "X": "dir4",
+        "Y": "mod1",
+        "Z": "dir2"
+      },
+      "plan": "moose_reduced_satellite_rule_13",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "ins1",
+        "B": "sat2",
+        "C": "dir1",
+        "D": "sat2",
+        "X": "dir4",
+        "Y": "mod1",
+        "Z": "sat2"
+      },
+      "plan": "have_image_prepare_pointing_Z_X",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "ins3",
+        "B": "sat3",
+        "C": "dir2",
+        "D": "sat3",
+        "X": "dir4",
+        "Y": "mod1",
+        "Z": "sat3"
+      },
+      "plan": "have_image_prepare_pointing_Z_X",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/satellite/test/p0_02.pddl",
+  "reason": null,
+  "request_count": 8,
+  "return_count": 16,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 3,
+  "verification_seconds": 0.0006022919551469386,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "ins3"
+            ],
+            [
+              "B",
+              "sat3"
+            ],
+            [
+              "C",
+              "dir2"
+            ],
+            [
+              "D",
+              "sat3"
+            ],
+            [
+              "X",
+              "dir4"
+            ],
+            [
+              "Y",
+              "mod1"
+            ],
+            [
+              "Z",
+              "sat3"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "sat3",
+                  "dir4"
+                ],
+                "symbol": "pointing"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "dir4",
+                  "mod1"
+                ],
+                "symbol": "have_image"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "dir4",
+              "mod1"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "have_image_prepare_pointing_Z_X"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "e3565410414bda57831849e8c8a2c44cb96e8c3aa53a80d3445cccf83dd423d3",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "ins2"
+            ],
+            [
+              "B",
+              "sat1"
+            ],
+            [
+              "X",
+              "dir4"
+            ],
+            [
+              "Y",
+              "mod1"
+            ],
+            [
+              "Z",
+              "dir1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ins2",
+                  "sat1"
+                ],
+                "symbol": "switch_on"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir1",
+                  "dir4"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "ins2",
+                  "dir1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir4",
+                  "dir1"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir4",
+                  "ins2",
+                  "mod1"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "dir4",
+              "mod1"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "moose_reduced_satellite_rule_12"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ins2",
+                "sat1"
+              ],
+              "symbol": "switch_on"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir1",
+                "dir4"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "ins2",
+                "dir1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir4",
+                "dir1"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir4",
+                "ins2",
+                "mod1"
+              ],
+              "symbol": "take_image"
+            }
+          }
+        ],
+        "end_state_sha256": "e3565410414bda57831849e8c8a2c44cb96e8c3aa53a80d3445cccf83dd423d3",
+        "start_state_sha256": "4a510d701d3702300d00ab323357696a0f0bff20a4b3f3af1cea87d7471e13e6"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "sat3"
+            ],
+            [
+              "Y",
+              "dir4"
+            ],
+            [
+              "Z",
+              "dir1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "sat3",
+                  "dir4",
+                  "dir1"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "sat3",
+              "dir4"
+            ],
+            "symbol": "pointing"
+          },
+          "name": "pointing_via_turn_to"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "sat3",
+                "dir4",
+                "dir1"
+              ],
+              "symbol": "turn_to"
+            }
+          }
+        ],
+        "end_state_sha256": "4a510d701d3702300d00ab323357696a0f0bff20a4b3f3af1cea87d7471e13e6",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "ins1"
+            ],
+            [
+              "B",
+              "sat2"
+            ],
+            [
+              "C",
+              "dir1"
+            ],
+            [
+              "D",
+              "sat2"
+            ],
+            [
+              "X",
+              "dir4"
+            ],
+            [
+              "Y",
+              "mod1"
+            ],
+            [
+              "Z",
+              "sat2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "sat2",
+                  "dir4"
+                ],
+                "symbol": "pointing"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "dir4",
+                  "mod1"
+                ],
+                "symbol": "have_image"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "dir4",
+              "mod1"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "have_image_prepare_pointing_Z_X"
+        },
+        "children": [
+          {
+            "proof": 5
+          },
+          {
+            "proof": 4
+          }
+        ],
+        "end_state_sha256": "efe70cfaaf0a2f7372e9254d972d5cd3eadc9ea7f353fd1fedf5e59c77ee33ce",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "ins2"
+            ],
+            [
+              "B",
+              "sat1"
+            ],
+            [
+              "X",
+              "dir4"
+            ],
+            [
+              "Y",
+              "mod1"
+            ],
+            [
+              "Z",
+              "dir1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ins2",
+                  "sat1"
+                ],
+                "symbol": "switch_on"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir1",
+                  "dir4"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "ins2",
+                  "dir1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir4",
+                  "dir1"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir4",
+                  "ins2",
+                  "mod1"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "dir4",
+              "mod1"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "moose_reduced_satellite_rule_12"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ins2",
+                "sat1"
+              ],
+              "symbol": "switch_on"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir1",
+                "dir4"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "ins2",
+                "dir1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir4",
+                "dir1"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir4",
+                "ins2",
+                "mod1"
+              ],
+              "symbol": "take_image"
+            }
+          }
+        ],
+        "end_state_sha256": "efe70cfaaf0a2f7372e9254d972d5cd3eadc9ea7f353fd1fedf5e59c77ee33ce",
+        "start_state_sha256": "2314eec6dc8603e77f50e32c868a8aa39410231f4724a9cf74a2a314c1464bfb"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "sat2"
+            ],
+            [
+              "Y",
+              "dir4"
+            ],
+            [
+              "Z",
+              "dir3"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "sat2",
+                  "dir4",
+                  "dir3"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "sat2",
+              "dir4"
+            ],
+            "symbol": "pointing"
+          },
+          "name": "pointing_via_turn_to"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "sat2",
+                "dir4",
+                "dir3"
+              ],
+              "symbol": "turn_to"
+            }
+          }
+        ],
+        "end_state_sha256": "2314eec6dc8603e77f50e32c868a8aa39410231f4724a9cf74a2a314c1464bfb",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "dir1"
+            ],
+            [
+              "B",
+              "ins3"
+            ],
+            [
+              "C",
+              "sat3"
+            ],
+            [
+              "X",
+              "dir4"
+            ],
+            [
+              "Y",
+              "mod1"
+            ],
+            [
+              "Z",
+              "dir2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ins3",
+                  "sat3"
+                ],
+                "symbol": "switch_on"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat3",
+                  "dir2",
+                  "dir1"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat3",
+                  "ins3",
+                  "dir2"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat3",
+                  "dir4",
+                  "dir2"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat3",
+                  "dir4",
+                  "ins3",
+                  "mod1"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "dir4",
+              "mod1"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "moose_reduced_satellite_rule_13"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ins3",
+                "sat3"
+              ],
+              "symbol": "switch_on"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat3",
+                "dir2",
+                "dir1"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat3",
+                "ins3",
+                "dir2"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat3",
+                "dir4",
+                "dir2"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat3",
+                "dir4",
+                "ins3",
+                "mod1"
+              ],
+              "symbol": "take_image"
+            }
+          }
+        ],
+        "end_state_sha256": "8117edd0e29372f220400ca89fb5834c389687abc605e5f29745decd17639bdc",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "dir3"
+            ],
+            [
+              "B",
+              "ins1"
+            ],
+            [
+              "C",
+              "sat2"
+            ],
+            [
+              "X",
+              "dir4"
+            ],
+            [
+              "Y",
+              "mod1"
+            ],
+            [
+              "Z",
+              "dir1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ins1",
+                  "sat2"
+                ],
+                "symbol": "switch_on"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat2",
+                  "dir1",
+                  "dir3"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat2",
+                  "ins1",
+                  "dir1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat2",
+                  "dir4",
+                  "dir1"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat2",
+                  "dir4",
+                  "ins1",
+                  "mod1"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "dir4",
+              "mod1"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "moose_reduced_satellite_rule_13"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ins1",
+                "sat2"
+              ],
+              "symbol": "switch_on"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat2",
+                "dir1",
+                "dir3"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat2",
+                "ins1",
+                "dir1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat2",
+                "dir4",
+                "dir1"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat2",
+                "dir4",
+                "ins1",
+                "mod1"
+              ],
+              "symbol": "take_image"
+            }
+          }
+        ],
+        "end_state_sha256": "31924cf75bc2eec062c9a17c81ab7001e73f3c197230ab6c98a4199952d6a33f",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "ins2"
+            ],
+            [
+              "B",
+              "sat1"
+            ],
+            [
+              "X",
+              "dir4"
+            ],
+            [
+              "Y",
+              "mod1"
+            ],
+            [
+              "Z",
+              "dir1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ins2",
+                  "sat1"
+                ],
+                "symbol": "switch_on"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir1",
+                  "dir4"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "ins2",
+                  "dir1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir4",
+                  "dir1"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "sat1",
+                  "dir4",
+                  "ins2",
+                  "mod1"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "dir4",
+              "mod1"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "moose_reduced_satellite_rule_12"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ins2",
+                "sat1"
+              ],
+              "symbol": "switch_on"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir1",
+                "dir4"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "ins2",
+                "dir1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir4",
+                "dir1"
+              ],
+              "symbol": "turn_to"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "sat1",
+                "dir4",
+                "ins2",
+                "mod1"
+              ],
+              "symbol": "take_image"
+            }
+          }
+        ],
+        "end_state_sha256": "bf944443685081a32269dc36f7b2e4422924a6dbdcfda8749a0ccb3a3aa8f420",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      }
+    ],
+    "roots": [
+      8,
+      8,
+      7,
+      6,
+      3,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

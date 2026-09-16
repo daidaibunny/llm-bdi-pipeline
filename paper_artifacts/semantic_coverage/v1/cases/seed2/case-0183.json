@@ -1,0 +1,483 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.0010990419541485608,
+  "case_index": 183,
+  "configuration_count": 14,
+  "correctness": {
+    "fail": 0,
+    "pass": 3,
+    "total": 3,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "transport",
+  "goal": {
+    "arguments": [
+      "p1",
+      "l2"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "c1",
+        "B": "c2",
+        "C": "v1",
+        "X": "p1",
+        "Y": "l2",
+        "Z": "l1"
+      },
+      "plan": "moose_reduced_transport_rule_3",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "c1",
+        "B": "c2",
+        "C": "v2",
+        "X": "p1",
+        "Y": "l2",
+        "Z": "l1"
+      },
+      "plan": "moose_reduced_transport_rule_4",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l1",
+        "B": "c0",
+        "C": "c1",
+        "D": "v3",
+        "X": "p1",
+        "Y": "l2",
+        "Z": "l5"
+      },
+      "plan": "moose_reduced_transport_rule_5",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/transport/test/p0_02.pddl",
+  "reason": null,
+  "request_count": 1,
+  "return_count": 3,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 2,
+  "verification_seconds": 0.0002837920328602195,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l1"
+            ],
+            [
+              "B",
+              "c0"
+            ],
+            [
+              "C",
+              "c1"
+            ],
+            [
+              "D",
+              "v3"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l2"
+            ],
+            [
+              "Z",
+              "l5"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l5",
+                  "l1"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l1",
+                  "p1",
+                  "c0",
+                  "c1"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l1",
+                  "l2"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l2",
+                  "p1",
+                  "c0",
+                  "c1"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l2"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_transport_rule_5"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l5",
+                "l1"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l1",
+                "p1",
+                "c0",
+                "c1"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l1",
+                "l2"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l2",
+                "p1",
+                "c0",
+                "c1"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "1dc5246c79f3fdf318dbeaf78a9ddd9efd51f062249d570effea97836805f03c",
+        "start_state_sha256": "584a35d71091e13923a81b2c8cf3c0ce010569639274754d055c65fd5e47fbb6"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "c1"
+            ],
+            [
+              "B",
+              "c2"
+            ],
+            [
+              "C",
+              "v2"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l2"
+            ],
+            [
+              "Z",
+              "l1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l2",
+                  "l1"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l1",
+                  "p1",
+                  "c1",
+                  "c2"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l1",
+                  "l2"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l2",
+                  "p1",
+                  "c1",
+                  "c2"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l2"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_transport_rule_4"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l2",
+                "l1"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l1",
+                "p1",
+                "c1",
+                "c2"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l1",
+                "l2"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l2",
+                "p1",
+                "c1",
+                "c2"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "7b47285ad91e43d53b1a893ffc00681379d048678828d854b54d7862622fb774",
+        "start_state_sha256": "584a35d71091e13923a81b2c8cf3c0ce010569639274754d055c65fd5e47fbb6"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "c1"
+            ],
+            [
+              "B",
+              "c2"
+            ],
+            [
+              "C",
+              "v1"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l2"
+            ],
+            [
+              "Z",
+              "l1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l1",
+                  "p1",
+                  "c1",
+                  "c2"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l1",
+                  "l2"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l2",
+                  "p1",
+                  "c1",
+                  "c2"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l2"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_transport_rule_3"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l1",
+                "p1",
+                "c1",
+                "c2"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l1",
+                "l2"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l2",
+                "p1",
+                "c1",
+                "c2"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "03356265f2116f39d6d1b0870a3191219b21d571a89945fddb6ca4c6b5af0f2d",
+        "start_state_sha256": "584a35d71091e13923a81b2c8cf3c0ce010569639274754d055c65fd5e47fbb6"
+      }
+    ],
+    "roots": [
+      2,
+      2,
+      1,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

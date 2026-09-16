@@ -1,0 +1,178 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.00016850000247359276,
+  "case_index": 176,
+  "configuration_count": 4,
+  "correctness": {
+    "fail": 0,
+    "pass": 2,
+    "total": 2,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "satellite",
+  "goal": {
+    "arguments": [
+      "sat3",
+      "dir4"
+    ],
+    "symbol": "pointing"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "X": "sat3",
+        "Y": "dir4",
+        "Z": "dir1"
+      },
+      "plan": "pointing_via_turn_to",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "sat3",
+        "Y": "dir4",
+        "Z": "dir1"
+      },
+      "plan": "moose_reduced_satellite_rule_1",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/satellite/test/p0_02.pddl",
+  "reason": null,
+  "request_count": 1,
+  "return_count": 1,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 3,
+  "verification_seconds": 5.966698518022895e-05,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "sat3"
+            ],
+            [
+              "Y",
+              "dir4"
+            ],
+            [
+              "Z",
+              "dir1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "sat3",
+                  "dir4",
+                  "dir1"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "sat3",
+              "dir4"
+            ],
+            "symbol": "pointing"
+          },
+          "name": "moose_reduced_satellite_rule_1"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "sat3",
+                "dir4",
+                "dir1"
+              ],
+              "symbol": "turn_to"
+            }
+          }
+        ],
+        "end_state_sha256": "4a510d701d3702300d00ab323357696a0f0bff20a4b3f3af1cea87d7471e13e6",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "sat3"
+            ],
+            [
+              "Y",
+              "dir4"
+            ],
+            [
+              "Z",
+              "dir1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "sat3",
+                  "dir4",
+                  "dir1"
+                ],
+                "symbol": "turn_to"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "sat3",
+              "dir4"
+            ],
+            "symbol": "pointing"
+          },
+          "name": "pointing_via_turn_to"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "sat3",
+                "dir4",
+                "dir1"
+              ],
+              "symbol": "turn_to"
+            }
+          }
+        ],
+        "end_state_sha256": "4a510d701d3702300d00ab323357696a0f0bff20a4b3f3af1cea87d7471e13e6",
+        "start_state_sha256": "ea1acc517c3c297e25d1d49c4ce578dc51fcdf6c59cd0fe979e832d4d062bbf9"
+      }
+    ],
+    "roots": [
+      1,
+      1,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

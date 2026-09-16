@@ -289,6 +289,40 @@ The architecture separates five modules.
 
 ## Experimental Comparison Contract
 
+### Supervisor Metrics and Current Evaluation Work
+
+The latest instruction is to develop the requested metrics without changing
+the manuscript. The uploaded supervisor `preliminaries.tex` defines universal
+context-conditional plan-instance/template correctness and basic/structural
+extended coverage. The stateful execution audit below is a separate diagnostic,
+not a substitute for those coverage equations or a completed final evaluation.
+
+The source ZIP and TeX hashes and definition line numbers are recorded in
+`paper_artifacts/semantic_coverage/v1/definition_audit.json`. Exact Boolean
+model counting gives 6,428 scoped ground-context counts from the observed
+bindings. Thirty template/instance groups violate binding-invariant coverage:
+one Tower plan in the same instance has 1/256 versus 1/128 under two applicable
+bindings because aliasing changes the distinct ground context atoms. This count
+uses the declared unconstrained Boolean-world measure, not a sample success rate.
+
+All 80 frozen libraries contain direct recursive calls. The uploaded structural
+equations require a recursion/fixed-point convention; none is silently imposed.
+They also require a binding aggregation and overlap rule, and the four numeric
+domains require a numeric state space and measure. Literal sum and explicit
+partition-max implementations are separate APIs. Neither is silently clamped to
+one or reinterpreted as execution probability. The partition implementation
+reproduces 19/32 in Waters (2014), Figure 1; this does not validate a recursive
+extension or establish correctness of the compiled libraries.
+
+The universal correctness property is already refuted for 24 Logistics
+template-seed pairs by finite initial-state counterexamples. Ten Numeric Minecraft
+template-seed pairs violate the analogous integer-valued completion contract,
+which is outside the uploaded Boolean state-space definition until that measure
+is extended explicitly. All other templates remain unproved, not verified by
+absence of sampled failures. Final-paper metric generation remains incomplete.
+
+### Independent Stateful Diagnostic
+
 The independent post-hoc semantic audit uses stateful call-return summaries,
 not compiler certificates or products of marginal subgoal coverage. An applicable
 fully bound plan is correct at a tested state only if its complete body has a
@@ -310,6 +344,26 @@ and upper bounds. This finite diagnostic scope is not universal lifted correctne
 uniform coverage of all world states, or a replacement for the full execution
 benchmark. The selector does not optimize this post-hoc state coverage. The frozen
 protocol and semantic library projections are under `paper_artifacts/semantic_coverage/v1`.
+
+The completed audit has 770 PASS, 10 FAIL, and 150 UNKNOWN goal-state requests;
+five-seed mean coverage bounds are [82.8%, 98.9%]. The 17,473 enumerated
+applicable plan-state bindings have 6,645 PASS, 4,228 FAIL, and 6,600 UNKNOWN
+outcomes. Binding enumeration is incomplete for another 145 roots, so an overall
+correctness percentage is undefined. Only 668 of 7,495 template-seed pairs are
+observed. Thirteen domains have all audited requests and bindings pass; this is
+not a universal statement over their world states or templates.
+
+Two frozen-library counterexamples refute unconditional context-conditional
+completion: a Logistics preparation plan can call a subgoal for which no
+implementation is applicable, and a Numeric Minecraft macro for a zero-count
+target returns after reducing four to three. Type-compatible call closure and
+numeric progress are weaker than the strong completion definition. The appendix
+proofs are conditional on actual callee completion; do not present them as
+proving that every frozen branch meets this definition. The post-hoc evaluator
+does not change the libraries, reclassify UNKNOWN as failure, or replace the
+separately validated original query-execution results. Its scope is sequential
+atomic achievement semantics, not arbitrary Jason recovery or universal TEG
+controller correctness.
 
 The framework is not evaluated as though it were one more per-instance PDDL
 planner. MOOSE is one instantiated Evidence Module provider; the proposed

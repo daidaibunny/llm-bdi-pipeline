@@ -1,0 +1,1169 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.019769333011936396,
+  "case_index": 90,
+  "configuration_count": 176,
+  "correctness": {
+    "fail": 0,
+    "pass": 8,
+    "total": 8,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "gripper",
+  "goal": {
+    "arguments": [
+      "ball5",
+      "roomb"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "rooma",
+        "X": "ball5",
+        "Y": "roomb",
+        "Z": "left"
+      },
+      "plan": "at_via_pick_then_move_then_drop",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "rooma",
+        "X": "ball5",
+        "Y": "roomb",
+        "Z": "right"
+      },
+      "plan": "at_via_pick_then_move_then_drop",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "left",
+        "X": "ball5",
+        "Y": "roomb",
+        "Z": "rooma"
+      },
+      "plan": "moose_reduced_gripper_rule_3",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "right",
+        "X": "ball5",
+        "Y": "roomb",
+        "Z": "rooma"
+      },
+      "plan": "moose_reduced_gripper_rule_3",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "B": "left",
+        "X": "ball5",
+        "Y": "roomb"
+      },
+      "plan": "at_prepare_carry_X_B",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "B": "right",
+        "X": "ball5",
+        "Y": "roomb"
+      },
+      "plan": "at_prepare_carry_X_B",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "B": "roomb",
+        "X": "ball5",
+        "Y": "roomb"
+      },
+      "plan": "at_prepare_at-robby_B",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "ball5",
+        "Y": "roomb"
+      },
+      "plan": "at_prepare_at-robby_Y",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/gripper/test/p0_01.pddl",
+  "reason": null,
+  "request_count": 24,
+  "return_count": 20,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 0,
+  "verification_seconds": 0.0015319589874707162,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "roomb"
+                ],
+                "symbol": "at-robby"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_at-robby_Y"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "left"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ],
+            [
+              "Z",
+              "rooma"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "roomb",
+                  "rooma"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "rooma",
+                  "left"
+                ],
+                "symbol": "pick"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rooma",
+                  "roomb"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb",
+                  "left"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_gripper_rule_4"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "roomb",
+                "rooma"
+              ],
+              "symbol": "move"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "rooma",
+                "left"
+              ],
+              "symbol": "pick"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rooma",
+                "roomb"
+              ],
+              "symbol": "move"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "roomb",
+                "left"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "f00e29d381e20f625e1aadc88f316c3eed91662d8ac65606e98a7125e0f9539c"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "roomb"
+            ],
+            [
+              "Y",
+              "rooma"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rooma",
+                  "roomb"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "roomb"
+            ],
+            "symbol": "at-robby"
+          },
+          "name": "at-robby_via_move"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rooma",
+                "roomb"
+              ],
+              "symbol": "move"
+            }
+          }
+        ],
+        "end_state_sha256": "f00e29d381e20f625e1aadc88f316c3eed91662d8ac65606e98a7125e0f9539c",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "B",
+              "roomb"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "roomb"
+                ],
+                "symbol": "at-robby"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_at-robby_B"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "B",
+              "right"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "right"
+                ],
+                "symbol": "carry"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_carry_X_B"
+        },
+        "children": [
+          {
+            "proof": 6
+          },
+          {
+            "proof": 5
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "right"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ],
+            [
+              "Z",
+              "rooma"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rooma",
+                  "roomb"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb",
+                  "right"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_gripper_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rooma",
+                "roomb"
+              ],
+              "symbol": "move"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "roomb",
+                "right"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "27b8e40d32db93b46fab6699a828c3cbf2cef0443ba06780213646fdfd0cdf2a"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "right"
+            ],
+            [
+              "Z",
+              "rooma"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "rooma",
+                  "right"
+                ],
+                "symbol": "pick"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "right"
+            ],
+            "symbol": "carry"
+          },
+          "name": "carry_via_pick"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "rooma",
+                "right"
+              ],
+              "symbol": "pick"
+            }
+          }
+        ],
+        "end_state_sha256": "27b8e40d32db93b46fab6699a828c3cbf2cef0443ba06780213646fdfd0cdf2a",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "B",
+              "left"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "left"
+                ],
+                "symbol": "carry"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_carry_X_B"
+        },
+        "children": [
+          {
+            "proof": 9
+          },
+          {
+            "proof": 8
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "left"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ],
+            [
+              "Z",
+              "rooma"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rooma",
+                  "roomb"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb",
+                  "left"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_gripper_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rooma",
+                "roomb"
+              ],
+              "symbol": "move"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "roomb",
+                "left"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "8b6d4abdc1be8bc094ec5e0e792605adac109fa518a1b208d38bec263c458df7"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "left"
+            ],
+            [
+              "Z",
+              "rooma"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "rooma",
+                  "left"
+                ],
+                "symbol": "pick"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "left"
+            ],
+            "symbol": "carry"
+          },
+          "name": "carry_via_pick"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "rooma",
+                "left"
+              ],
+              "symbol": "pick"
+            }
+          }
+        ],
+        "end_state_sha256": "8b6d4abdc1be8bc094ec5e0e792605adac109fa518a1b208d38bec263c458df7",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "right"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ],
+            [
+              "Z",
+              "rooma"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "rooma",
+                  "right"
+                ],
+                "symbol": "pick"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rooma",
+                  "roomb"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb",
+                  "right"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_gripper_rule_3"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "rooma",
+                "right"
+              ],
+              "symbol": "pick"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rooma",
+                "roomb"
+              ],
+              "symbol": "move"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "roomb",
+                "right"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "left"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ],
+            [
+              "Z",
+              "rooma"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "rooma",
+                  "left"
+                ],
+                "symbol": "pick"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rooma",
+                  "roomb"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb",
+                  "left"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_gripper_rule_3"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "rooma",
+                "left"
+              ],
+              "symbol": "pick"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rooma",
+                "roomb"
+              ],
+              "symbol": "move"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "roomb",
+                "left"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "rooma"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ],
+            [
+              "Z",
+              "right"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "rooma",
+                  "right"
+                ],
+                "symbol": "pick"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rooma",
+                  "roomb"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb",
+                  "right"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_via_pick_then_move_then_drop"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "rooma",
+                "right"
+              ],
+              "symbol": "pick"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rooma",
+                "roomb"
+              ],
+              "symbol": "move"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "roomb",
+                "right"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "rooma"
+            ],
+            [
+              "X",
+              "ball5"
+            ],
+            [
+              "Y",
+              "roomb"
+            ],
+            [
+              "Z",
+              "left"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "rooma",
+                  "left"
+                ],
+                "symbol": "pick"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rooma",
+                  "roomb"
+                ],
+                "symbol": "move"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "ball5",
+                  "roomb",
+                  "left"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "ball5",
+              "roomb"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_via_pick_then_move_then_drop"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "rooma",
+                "left"
+              ],
+              "symbol": "pick"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rooma",
+                "roomb"
+              ],
+              "symbol": "move"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "ball5",
+                "roomb",
+                "left"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "0ca3b11860f9eb21e546ecda4d0f6dd2e28e401e9fe89a1ee14360d065af1e54",
+        "start_state_sha256": "ca781077fb18685eeed35672658ed28b595e187081e68d8108606c01fc7469b3"
+      }
+    ],
+    "roots": [
+      13,
+      13,
+      12,
+      11,
+      10,
+      7,
+      4,
+      3,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

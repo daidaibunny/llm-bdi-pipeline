@@ -1,0 +1,215 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.1529151250142604,
+  "case_index": 124,
+  "configuration_count": 7,
+  "correctness": {
+    "fail": 2,
+    "pass": 1,
+    "total": 3,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 0.3333333333333333,
+    "upper": 0.3333333333333333
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "logistics",
+  "goal": {
+    "arguments": [
+      "p4",
+      "l0-1"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "l0-0",
+        "B": "t0",
+        "X": "p4",
+        "Y": "l0-1",
+        "Z": "c0"
+      },
+      "plan": "moose_reduced_logistics_rule_10",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l0-1",
+        "B": "c0",
+        "C": "t0",
+        "X": "p4",
+        "Y": "l0-1",
+        "Z": "t0"
+      },
+      "plan": "at_prepare_in_X_C",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "X": "p4",
+        "Y": "l0-1",
+        "Z": "t0"
+      },
+      "plan": "at_prepare_in_X_Z",
+      "status": "fail"
+    }
+  ],
+  "problem": "src/domains/logistics/test/p0_01.pddl",
+  "reason": null,
+  "request_count": 2,
+  "return_count": 1,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 2,
+  "verification_seconds": 8.941697888076305e-05,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l0-0"
+            ],
+            [
+              "B",
+              "t0"
+            ],
+            [
+              "X",
+              "p4"
+            ],
+            [
+              "Y",
+              "l0-1"
+            ],
+            [
+              "Z",
+              "c0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "t0",
+                  "l0-1",
+                  "l0-0",
+                  "c0"
+                ],
+                "symbol": "drive-truck"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p4",
+                  "t0",
+                  "l0-0"
+                ],
+                "symbol": "load-truck"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "t0",
+                  "l0-0",
+                  "l0-1",
+                  "c0"
+                ],
+                "symbol": "drive-truck"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p4",
+                  "t0",
+                  "l0-1"
+                ],
+                "symbol": "unload-truck"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p4",
+              "l0-1"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_logistics_rule_10"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "t0",
+                "l0-1",
+                "l0-0",
+                "c0"
+              ],
+              "symbol": "drive-truck"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "p4",
+                "t0",
+                "l0-0"
+              ],
+              "symbol": "load-truck"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "t0",
+                "l0-0",
+                "l0-1",
+                "c0"
+              ],
+              "symbol": "drive-truck"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "p4",
+                "t0",
+                "l0-1"
+              ],
+              "symbol": "unload-truck"
+            }
+          }
+        ],
+        "end_state_sha256": "497ff8846d599f5d50b33a78b1c51b63b42575b8a18d6764165ad69ac640e6d5",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      }
+    ],
+    "roots": [
+      0,
+      0,
+      null,
+      null
+    ]
+  },
+  "witnesses_replayed": true
+}

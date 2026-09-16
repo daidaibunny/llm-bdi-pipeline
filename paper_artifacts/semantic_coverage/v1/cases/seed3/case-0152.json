@@ -1,0 +1,846 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.0013433750136755407,
+  "case_index": 152,
+  "configuration_count": 28,
+  "correctness": {
+    "fail": 0,
+    "pass": 6,
+    "total": 6,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "numeric-transport",
+  "goal": {
+    "arguments": [
+      "p1",
+      "l3"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "l2",
+        "N": "1",
+        "X": "p1",
+        "Y": "l3",
+        "Z": "v1"
+      },
+      "plan": "at_via_pick-up_then_drive_then_drop",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l2",
+        "B": "l5",
+        "N": "1",
+        "X": "p1",
+        "Y": "l3",
+        "Z": "v2"
+      },
+      "plan": "at_via_drive_then_pick-up_then_drive_then_drop",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l2",
+        "B": "l1",
+        "N": "2",
+        "X": "p1",
+        "Y": "l3",
+        "Z": "v3"
+      },
+      "plan": "at_via_drive_then_pick-up_then_drive_then_drop",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "v1",
+        "N": "1",
+        "X": "p1",
+        "Y": "l3",
+        "Z": "l2"
+      },
+      "plan": "moose_reduced_numeric_transport_rule_3",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l2",
+        "B": "v2",
+        "N": "1",
+        "X": "p1",
+        "Y": "l3",
+        "Z": "l5"
+      },
+      "plan": "moose_reduced_numeric_transport_rule_4",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l2",
+        "B": "v3",
+        "N": "2",
+        "X": "p1",
+        "Y": "l3",
+        "Z": "l1"
+      },
+      "plan": "moose_reduced_numeric_transport_rule_4",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/numeric-transport/test/p0_01.pddl",
+  "reason": null,
+  "request_count": 1,
+  "return_count": 3,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 3,
+  "verification_seconds": 0.00042637501610442996,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l2"
+            ],
+            [
+              "B",
+              "v3"
+            ],
+            [
+              "N",
+              "2"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l3"
+            ],
+            [
+              "Z",
+              "l1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l1",
+                  "l2"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l2",
+                  "p1"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l2",
+                  "l3"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l3",
+                  "p1"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l3"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_numeric_transport_rule_4"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l1",
+                "l2"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l2",
+                "p1"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l2",
+                "l3"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l3",
+                "p1"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "2fe336a163410e563739b2c1a298ac78620013b3557c1ee0ec1bb669020d9cf4",
+        "start_state_sha256": "be69ceb7610954fa873924203d0b349605ceb4568fcf43696a774309efba417b"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l2"
+            ],
+            [
+              "B",
+              "v2"
+            ],
+            [
+              "N",
+              "1"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l3"
+            ],
+            [
+              "Z",
+              "l5"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l5",
+                  "l2"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l2",
+                  "p1"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l2",
+                  "l3"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l3",
+                  "p1"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l3"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_numeric_transport_rule_4"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l5",
+                "l2"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l2",
+                "p1"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l2",
+                "l3"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l3",
+                "p1"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "f2ef1ff260c651d3fe47876cb7f01ae224374c0e240c0d7b4a6dae46a147d416",
+        "start_state_sha256": "be69ceb7610954fa873924203d0b349605ceb4568fcf43696a774309efba417b"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "v1"
+            ],
+            [
+              "N",
+              "1"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l3"
+            ],
+            [
+              "Z",
+              "l2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l2",
+                  "p1"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l2",
+                  "l3"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l3",
+                  "p1"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l3"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_numeric_transport_rule_3"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l2",
+                "p1"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l2",
+                "l3"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l3",
+                "p1"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "75d3545fc60e853f45eb3c5bed5c67f00bb0f26204ad40e545833175f2b9c5dd",
+        "start_state_sha256": "be69ceb7610954fa873924203d0b349605ceb4568fcf43696a774309efba417b"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l2"
+            ],
+            [
+              "B",
+              "l1"
+            ],
+            [
+              "N",
+              "2"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l3"
+            ],
+            [
+              "Z",
+              "v3"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l1",
+                  "l2"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l2",
+                  "p1"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l2",
+                  "l3"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v3",
+                  "l3",
+                  "p1"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l3"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_via_drive_then_pick-up_then_drive_then_drop"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l1",
+                "l2"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l2",
+                "p1"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l2",
+                "l3"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v3",
+                "l3",
+                "p1"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "2fe336a163410e563739b2c1a298ac78620013b3557c1ee0ec1bb669020d9cf4",
+        "start_state_sha256": "be69ceb7610954fa873924203d0b349605ceb4568fcf43696a774309efba417b"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l2"
+            ],
+            [
+              "B",
+              "l5"
+            ],
+            [
+              "N",
+              "1"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l3"
+            ],
+            [
+              "Z",
+              "v2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l5",
+                  "l2"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l2",
+                  "p1"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l2",
+                  "l3"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v2",
+                  "l3",
+                  "p1"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l3"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_via_drive_then_pick-up_then_drive_then_drop"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l5",
+                "l2"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l2",
+                "p1"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l2",
+                "l3"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v2",
+                "l3",
+                "p1"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "f2ef1ff260c651d3fe47876cb7f01ae224374c0e240c0d7b4a6dae46a147d416",
+        "start_state_sha256": "be69ceb7610954fa873924203d0b349605ceb4568fcf43696a774309efba417b"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l2"
+            ],
+            [
+              "N",
+              "1"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "l3"
+            ],
+            [
+              "Z",
+              "v1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l2",
+                  "p1"
+                ],
+                "symbol": "pick-up"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l2",
+                  "l3"
+                ],
+                "symbol": "drive"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "v1",
+                  "l3",
+                  "p1"
+                ],
+                "symbol": "drop"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1",
+              "l3"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_via_pick-up_then_drive_then_drop"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l2",
+                "p1"
+              ],
+              "symbol": "pick-up"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l2",
+                "l3"
+              ],
+              "symbol": "drive"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "v1",
+                "l3",
+                "p1"
+              ],
+              "symbol": "drop"
+            }
+          }
+        ],
+        "end_state_sha256": "75d3545fc60e853f45eb3c5bed5c67f00bb0f26204ad40e545833175f2b9c5dd",
+        "start_state_sha256": "be69ceb7610954fa873924203d0b349605ceb4568fcf43696a774309efba417b"
+      }
+    ],
+    "roots": [
+      5,
+      5,
+      4,
+      3,
+      2,
+      1,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

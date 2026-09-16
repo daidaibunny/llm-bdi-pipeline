@@ -1,0 +1,6775 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.07940033404156566,
+  "case_index": 164,
+  "configuration_count": 702,
+  "correctness": {
+    "fail": 0,
+    "pass": 37,
+    "total": 37,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "rovers",
+  "goal": {
+    "arguments": [
+      "objective1",
+      "high_res"
+    ],
+    "symbol": "communicated_image_data"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_23",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_26",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_35",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_35",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_43",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_43",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_45",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_45",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint3",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_48",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint4",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_48",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint3",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_51",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint4",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_51",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint3",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_56",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint4",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_56",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint4",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_62",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint3",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_62",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_63",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_63",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_66",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_66",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint3",
+        "V7": "waypoint4",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_68",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint4",
+        "V7": "waypoint3",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_68",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_69",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_69",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint4",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_74",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint3",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_74",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint3",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_76",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "rover1",
+        "C": "waypoint1",
+        "D": "waypoint4",
+        "V7": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_76",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint4",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_81",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint3",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_81",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint4",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_86",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint3",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_86",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint3",
+        "V8": "waypoint4",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_87",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "objective1",
+        "C": "rover1",
+        "D": "waypoint1",
+        "V7": "waypoint4",
+        "V8": "waypoint3",
+        "V9": "waypoint2",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "camera1"
+      },
+      "plan": "moose_reduced_rovers_rule_87",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "waypoint1",
+        "C": "waypoint2",
+        "V7": "waypoint1",
+        "V8": "camera1",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "rover1"
+      },
+      "plan": "communicated_image_data_prepare_have_image_Z_X_Y",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "waypoint1",
+        "C": "waypoint2",
+        "V7": "waypoint3",
+        "V8": "camera1",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "rover1"
+      },
+      "plan": "communicated_image_data_prepare_have_image_Z_X_Y",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "general",
+        "B": "waypoint1",
+        "C": "waypoint2",
+        "V7": "waypoint4",
+        "V8": "camera1",
+        "X": "objective1",
+        "Y": "high_res",
+        "Z": "rover1"
+      },
+      "plan": "communicated_image_data_prepare_have_image_Z_X_Y",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/rovers/test/p0_03.pddl",
+  "reason": null,
+  "request_count": 25,
+  "return_count": 37,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 0,
+  "verification_seconds": 0.009705875010695308,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "C",
+              "waypoint2"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "camera1"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "objective1",
+                  "high_res"
+                ],
+                "symbol": "have_image"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "objective1",
+                  "high_res"
+                ],
+                "symbol": "communicated_image_data"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "communicated_image_data_prepare_have_image_Z_X_Y"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "C",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "communicated_image_data_via_communicate_image_data"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "41aa24eef921b55339e651e1fdf9ff14f78981b98748c9d6f2d81ce9159749f6"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "waypoint1"
+            ],
+            [
+              "B",
+              "camera1"
+            ],
+            [
+              "C",
+              "objective1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "rover1"
+            ],
+            [
+              "Y",
+              "objective1"
+            ],
+            [
+              "Z",
+              "high_res"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "camera1",
+                  "rover1"
+                ],
+                "symbol": "calibrated"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "objective1",
+                  "high_res"
+                ],
+                "symbol": "have_image"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "rover1",
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "have_image_prepare_calibrated_B_X"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 3
+          }
+        ],
+        "end_state_sha256": "41aa24eef921b55339e651e1fdf9ff14f78981b98748c9d6f2d81ce9159749f6",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "waypoint1"
+            ],
+            [
+              "B",
+              "camera1"
+            ],
+            [
+              "X",
+              "rover1"
+            ],
+            [
+              "Y",
+              "objective1"
+            ],
+            [
+              "Z",
+              "high_res"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "rover1",
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "have_image"
+          },
+          "name": "have_image_via_take_image"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          }
+        ],
+        "end_state_sha256": "41aa24eef921b55339e651e1fdf9ff14f78981b98748c9d6f2d81ce9159749f6",
+        "start_state_sha256": "a56d79211a6241e652aa07333c45338b4b80c802f1bbfeaea0dfb383269c2361"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "waypoint1"
+            ],
+            [
+              "X",
+              "camera1"
+            ],
+            [
+              "Y",
+              "rover1"
+            ],
+            [
+              "Z",
+              "objective1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "camera1",
+              "rover1"
+            ],
+            "symbol": "calibrated"
+          },
+          "name": "calibrated_via_calibrate"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          }
+        ],
+        "end_state_sha256": "a56d79211a6241e652aa07333c45338b4b80c802f1bbfeaea0dfb383269c2361",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "C",
+              "waypoint2"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "camera1"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "objective1",
+                  "high_res"
+                ],
+                "symbol": "have_image"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "objective1",
+                  "high_res"
+                ],
+                "symbol": "communicated_image_data"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "communicated_image_data_prepare_have_image_Z_X_Y"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "waypoint1"
+            ],
+            [
+              "C",
+              "waypoint2"
+            ],
+            [
+              "V7",
+              "waypoint1"
+            ],
+            [
+              "V8",
+              "camera1"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "rover1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "objective1",
+                  "high_res"
+                ],
+                "symbol": "have_image"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "objective1",
+                  "high_res"
+                ],
+                "symbol": "communicated_image_data"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "communicated_image_data_prepare_have_image_Z_X_Y"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint3"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_87"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint4"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_87"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint3"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_86"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint4"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_86"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint3"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_81"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint4"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_81"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint4"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_76"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint3"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_76"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint3"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_74"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint4"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_74"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_69"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_69"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint4"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_68"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint3"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_68"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_66"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_66"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_63"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint1"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_63"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint1"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint3"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_62"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint4"
+            ],
+            [
+              "V9",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_62"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint4"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_56"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint3"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_56"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint4"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_51"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint3"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_51"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint4"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_48"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint3"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_48"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_45"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_45"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint4"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_43"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint4"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint3"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_43"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint3"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint4"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint4"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint4",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint4",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_35"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint4"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint4",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint4",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3fe15620f206dca7aa5d7015c6bcf978d465f425dfa3c1c30996d68d84198536",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint3"
+            ],
+            [
+              "V8",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "waypoint3"
+                ],
+                "symbol": "navigate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint3",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint3",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_35"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "waypoint3"
+              ],
+              "symbol": "navigate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint3",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint3",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "3ca103fd01bc82e34ada70efd8fef6592b41eb7f6aee5c0cb9014a50eeae7ad8",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "rover1"
+            ],
+            [
+              "C",
+              "waypoint1"
+            ],
+            [
+              "D",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_26"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "general"
+            ],
+            [
+              "B",
+              "objective1"
+            ],
+            [
+              "C",
+              "rover1"
+            ],
+            [
+              "D",
+              "waypoint1"
+            ],
+            [
+              "V7",
+              "waypoint2"
+            ],
+            [
+              "X",
+              "objective1"
+            ],
+            [
+              "Y",
+              "high_res"
+            ],
+            [
+              "Z",
+              "camera1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "camera1",
+                  "objective1",
+                  "waypoint1"
+                ],
+                "symbol": "calibrate"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "waypoint1",
+                  "objective1",
+                  "camera1",
+                  "high_res"
+                ],
+                "symbol": "take_image"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "rover1",
+                  "general",
+                  "objective1",
+                  "high_res",
+                  "waypoint1",
+                  "waypoint2"
+                ],
+                "symbol": "communicate_image_data"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "objective1",
+              "high_res"
+            ],
+            "symbol": "communicated_image_data"
+          },
+          "name": "moose_reduced_rovers_rule_23"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "camera1",
+                "objective1",
+                "waypoint1"
+              ],
+              "symbol": "calibrate"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "waypoint1",
+                "objective1",
+                "camera1",
+                "high_res"
+              ],
+              "symbol": "take_image"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "rover1",
+                "general",
+                "objective1",
+                "high_res",
+                "waypoint1",
+                "waypoint2"
+              ],
+              "symbol": "communicate_image_data"
+            }
+          }
+        ],
+        "end_state_sha256": "44c67f8951915b42c3bead916e277369b1e564d6d829e309c00489f41270b4ba",
+        "start_state_sha256": "b224b6925b434b4be69b05a9035a14b6ac7653dcefa8b1700c12bd910298de29"
+      }
+    ],
+    "roots": [
+      40,
+      40,
+      39,
+      38,
+      37,
+      36,
+      35,
+      34,
+      33,
+      32,
+      31,
+      30,
+      29,
+      28,
+      27,
+      26,
+      25,
+      24,
+      23,
+      22,
+      21,
+      20,
+      19,
+      18,
+      17,
+      16,
+      15,
+      14,
+      13,
+      12,
+      11,
+      10,
+      9,
+      8,
+      7,
+      6,
+      5,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

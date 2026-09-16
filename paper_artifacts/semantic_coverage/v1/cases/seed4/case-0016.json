@@ -1,0 +1,2754 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.696027124999091,
+  "case_index": 16,
+  "configuration_count": 676,
+  "correctness": {
+    "fail": 0,
+    "pass": 4,
+    "total": 4,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "blocksworld-on",
+  "goal": {
+    "arguments": [
+      "b1",
+      "b2"
+    ],
+    "symbol": "on"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "X": "b1",
+        "Y": "b2"
+      },
+      "plan": "on_prepare_clear_X",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "b1",
+        "Y": "b2"
+      },
+      "plan": "on_prepare_clear_Y",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "b1",
+        "Y": "b2"
+      },
+      "plan": "on_prepare_holding_X",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "b1",
+        "Y": "b2"
+      },
+      "plan": "on_prepare_on-table_X",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/blocksworld-on/test/p-51-0.pddl",
+  "reason": null,
+  "request_count": 115,
+  "return_count": 164,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 4,
+  "verification_seconds": 0.008813083986751735,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "on-table"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_on-table_X"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ],
+            [
+              "Z",
+              "b36"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b36",
+                  "b2"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b36"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "pickup"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_on_rule_9"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b36",
+                "b2"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b36"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b1"
+              ],
+              "symbol": "pickup"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b2"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "8a14db5109345f7527eb954bdee0bb58d75d16ae754fdc79538ad6c9abf72e94"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "on-table"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "on-table"
+          },
+          "name": "on-table_prepare_clear_X"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 3
+          }
+        ],
+        "end_state_sha256": "8a14db5109345f7527eb954bdee0bb58d75d16ae754fdc79538ad6c9abf72e94",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b26"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b26"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "on-table"
+          },
+          "name": "on-table_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b26"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b1"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "8a14db5109345f7527eb954bdee0bb58d75d16ae754fdc79538ad6c9abf72e94",
+        "start_state_sha256": "c7626d91a73e1147dcf0b79460d6e1d82ab2a3e9f09fca568d56f8a71b55806d"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b17"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b17"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 6
+          },
+          {
+            "proof": 5
+          }
+        ],
+        "end_state_sha256": "c7626d91a73e1147dcf0b79460d6e1d82ab2a3e9f09fca568d56f8a71b55806d",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b17"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b17",
+                  "b1"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b17"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b17",
+                "b1"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b17"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "c7626d91a73e1147dcf0b79460d6e1d82ab2a3e9f09fca568d56f8a71b55806d",
+        "start_state_sha256": "96206be34bb9d39f862c08df8c18246aaaad35d2073966bd08aade071b4c49ca"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b17"
+            ],
+            [
+              "Y",
+              "b42"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b42"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b17"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b17"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 8
+          },
+          {
+            "proof": 7
+          }
+        ],
+        "end_state_sha256": "96206be34bb9d39f862c08df8c18246aaaad35d2073966bd08aade071b4c49ca",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b17"
+            ],
+            [
+              "Y",
+              "b42"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b42",
+                  "b17"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b42"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b17"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b42",
+                "b17"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b42"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "96206be34bb9d39f862c08df8c18246aaaad35d2073966bd08aade071b4c49ca",
+        "start_state_sha256": "67d5bd8da0ceea337be1b0815a864ef7376e496ba9687fb305ca1bdcaec34cfb"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b42"
+            ],
+            [
+              "Y",
+              "b47"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b47"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b42"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b42"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 10
+          },
+          {
+            "proof": 9
+          }
+        ],
+        "end_state_sha256": "67d5bd8da0ceea337be1b0815a864ef7376e496ba9687fb305ca1bdcaec34cfb",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b42"
+            ],
+            [
+              "Y",
+              "b47"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b47",
+                  "b42"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b47"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b42"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b47",
+                "b42"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b47"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "67d5bd8da0ceea337be1b0815a864ef7376e496ba9687fb305ca1bdcaec34cfb",
+        "start_state_sha256": "1fb5eff715fd5d88c6f3edce34a8772d98159acb9f380ad3dd877655d1be188f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b47"
+            ],
+            [
+              "Y",
+              "b19"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b19"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b47"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b47"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 12
+          },
+          {
+            "proof": 11
+          }
+        ],
+        "end_state_sha256": "1fb5eff715fd5d88c6f3edce34a8772d98159acb9f380ad3dd877655d1be188f",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b47"
+            ],
+            [
+              "Y",
+              "b19"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b19",
+                  "b47"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b19"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b47"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b19",
+                "b47"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b19"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "1fb5eff715fd5d88c6f3edce34a8772d98159acb9f380ad3dd877655d1be188f",
+        "start_state_sha256": "57d13c7ad03396503791d4fa9d457f11de55fb6deaf2c4bc0082affecf5c69ac"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b19"
+            ],
+            [
+              "Y",
+              "b24"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b24"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b19"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b19"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 14
+          },
+          {
+            "proof": 13
+          }
+        ],
+        "end_state_sha256": "57d13c7ad03396503791d4fa9d457f11de55fb6deaf2c4bc0082affecf5c69ac",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b19"
+            ],
+            [
+              "Y",
+              "b24"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b24",
+                  "b19"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b24"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b19"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b24",
+                "b19"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b24"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "57d13c7ad03396503791d4fa9d457f11de55fb6deaf2c4bc0082affecf5c69ac",
+        "start_state_sha256": "39d88e5e220333ed25aed27a9b7e29b76729506394e61798b36a29508273164e"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b24"
+            ],
+            [
+              "Y",
+              "b3"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b3"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b24"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b24"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 16
+          },
+          {
+            "proof": 15
+          }
+        ],
+        "end_state_sha256": "39d88e5e220333ed25aed27a9b7e29b76729506394e61798b36a29508273164e",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b24"
+            ],
+            [
+              "Y",
+              "b3"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b3",
+                  "b24"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b3"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b24"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b3",
+                "b24"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b3"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "39d88e5e220333ed25aed27a9b7e29b76729506394e61798b36a29508273164e",
+        "start_state_sha256": "026d1482e1f34f7d5cae89e1f61140661df7d56cf57d145f01f1507d4f1004ef"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b3"
+            ],
+            [
+              "Y",
+              "b35"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b35"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b3"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b3"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 18
+          },
+          {
+            "proof": 17
+          }
+        ],
+        "end_state_sha256": "026d1482e1f34f7d5cae89e1f61140661df7d56cf57d145f01f1507d4f1004ef",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b3"
+            ],
+            [
+              "Y",
+              "b35"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b35",
+                  "b3"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b35"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b3"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b35",
+                "b3"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b35"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "026d1482e1f34f7d5cae89e1f61140661df7d56cf57d145f01f1507d4f1004ef",
+        "start_state_sha256": "f9b79997794991df4a6292715789cc2a76edd6f57cb405040216d2a01203080d"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b35"
+            ],
+            [
+              "Y",
+              "b9"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b9",
+                  "b35"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b9"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b35"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b9",
+                "b35"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b9"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "f9b79997794991df4a6292715789cc2a76edd6f57cb405040216d2a01203080d",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "holding"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_holding_X"
+        },
+        "children": [
+          {
+            "proof": 21
+          },
+          {
+            "proof": 20
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "b36"
+            ],
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ],
+            [
+              "Z",
+              "b16"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b16"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b36",
+                  "b2"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b36"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b16"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_on_rule_16"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b16"
+              ],
+              "symbol": "stack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b36",
+                "b2"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b36"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b16"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b2"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "2a019dd5597eb6ff0a9bd6e04070b34eded573ff429242c3d379ad20d7d69632"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "holding"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "holding"
+          },
+          "name": "holding_prepare_clear_X"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 22
+          }
+        ],
+        "end_state_sha256": "2a019dd5597eb6ff0a9bd6e04070b34eded573ff429242c3d379ad20d7d69632",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b26"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b26"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "holding"
+          },
+          "name": "holding_via_unstack"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b26"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "2a019dd5597eb6ff0a9bd6e04070b34eded573ff429242c3d379ad20d7d69632",
+        "start_state_sha256": "c7626d91a73e1147dcf0b79460d6e1d82ab2a3e9f09fca568d56f8a71b55806d"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b2"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 41
+          },
+          {
+            "proof": 24
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_clear_X"
+        },
+        "children": [
+          {
+            "proof": 26
+          },
+          {
+            "proof": 25
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ],
+            [
+              "Z",
+              "b26"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b26"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_via_unstack_then_stack"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b26"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b2"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "d1851365b1222f04df1017b09ab8526038ff76fe3309b797c83b0d33904eb1b4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b17"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b17"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 28
+          },
+          {
+            "proof": 27
+          }
+        ],
+        "end_state_sha256": "d1851365b1222f04df1017b09ab8526038ff76fe3309b797c83b0d33904eb1b4",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b17"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b17",
+                  "b1"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b17"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b17",
+                "b1"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b17"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "d1851365b1222f04df1017b09ab8526038ff76fe3309b797c83b0d33904eb1b4",
+        "start_state_sha256": "5277a6f03e32c591b22052e1c07f8ff32ad7aa5ac0fbd35c7c784518448e4057"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b17"
+            ],
+            [
+              "Y",
+              "b42"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b42"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b17"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b17"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 30
+          },
+          {
+            "proof": 29
+          }
+        ],
+        "end_state_sha256": "5277a6f03e32c591b22052e1c07f8ff32ad7aa5ac0fbd35c7c784518448e4057",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b17"
+            ],
+            [
+              "Y",
+              "b42"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b42",
+                  "b17"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b42"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b17"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b42",
+                "b17"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b42"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "5277a6f03e32c591b22052e1c07f8ff32ad7aa5ac0fbd35c7c784518448e4057",
+        "start_state_sha256": "f286f6c098ffb7ce25f79ade62a7c891ad1953eeb66fbd74e22001cdeb9fa414"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b42"
+            ],
+            [
+              "Y",
+              "b47"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b47"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b42"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b42"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 32
+          },
+          {
+            "proof": 31
+          }
+        ],
+        "end_state_sha256": "f286f6c098ffb7ce25f79ade62a7c891ad1953eeb66fbd74e22001cdeb9fa414",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b42"
+            ],
+            [
+              "Y",
+              "b47"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b47",
+                  "b42"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b47"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b42"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b47",
+                "b42"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b47"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "f286f6c098ffb7ce25f79ade62a7c891ad1953eeb66fbd74e22001cdeb9fa414",
+        "start_state_sha256": "194b84ce34535e6dbbc24aa0abb08907bc547f0d499fbe8c5fce20a01f21413d"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b47"
+            ],
+            [
+              "Y",
+              "b19"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b19"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b47"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b47"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 34
+          },
+          {
+            "proof": 33
+          }
+        ],
+        "end_state_sha256": "194b84ce34535e6dbbc24aa0abb08907bc547f0d499fbe8c5fce20a01f21413d",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b47"
+            ],
+            [
+              "Y",
+              "b19"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b19",
+                  "b47"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b19"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b47"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b19",
+                "b47"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b19"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "194b84ce34535e6dbbc24aa0abb08907bc547f0d499fbe8c5fce20a01f21413d",
+        "start_state_sha256": "f9903a3d3c44b5b1642e289c9c5348c5a87d7784f537011ab29e86b0a37818a6"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b19"
+            ],
+            [
+              "Y",
+              "b24"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b24"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b19"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b19"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 36
+          },
+          {
+            "proof": 35
+          }
+        ],
+        "end_state_sha256": "f9903a3d3c44b5b1642e289c9c5348c5a87d7784f537011ab29e86b0a37818a6",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b19"
+            ],
+            [
+              "Y",
+              "b24"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b24",
+                  "b19"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b24"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b19"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b24",
+                "b19"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b24"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "f9903a3d3c44b5b1642e289c9c5348c5a87d7784f537011ab29e86b0a37818a6",
+        "start_state_sha256": "7f0c0f53d6afc6d25aa8afe82d8c22cf987baa64364385908595ce63ab684fe8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b24"
+            ],
+            [
+              "Y",
+              "b3"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b3"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b24"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b24"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 38
+          },
+          {
+            "proof": 37
+          }
+        ],
+        "end_state_sha256": "7f0c0f53d6afc6d25aa8afe82d8c22cf987baa64364385908595ce63ab684fe8",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b24"
+            ],
+            [
+              "Y",
+              "b3"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b3",
+                  "b24"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b3"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b24"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b3",
+                "b24"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b3"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "7f0c0f53d6afc6d25aa8afe82d8c22cf987baa64364385908595ce63ab684fe8",
+        "start_state_sha256": "6e905e74a3a4a9d3472789e8a87372808d9b6fd3f4b0f0ee58bcc343b9dfb6e6"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b3"
+            ],
+            [
+              "Y",
+              "b35"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b35"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b3"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b3"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 40
+          },
+          {
+            "proof": 39
+          }
+        ],
+        "end_state_sha256": "6e905e74a3a4a9d3472789e8a87372808d9b6fd3f4b0f0ee58bcc343b9dfb6e6",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b3"
+            ],
+            [
+              "Y",
+              "b35"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b35",
+                  "b3"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b35"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b3"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b35",
+                "b3"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b35"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "6e905e74a3a4a9d3472789e8a87372808d9b6fd3f4b0f0ee58bcc343b9dfb6e6",
+        "start_state_sha256": "7d411639bbcd0b38b6493a2c47e977a95c1026c45190c2740d7d7242ae7d5994"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b35"
+            ],
+            [
+              "Y",
+              "b9"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b9",
+                  "b35"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b9"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b35"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b9",
+                "b35"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b9"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "7d411639bbcd0b38b6493a2c47e977a95c1026c45190c2740d7d7242ae7d5994",
+        "start_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b2"
+            ],
+            [
+              "Y",
+              "b36"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b36",
+                  "b2"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b36"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b2"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b36",
+                "b2"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b36"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "66bfa424cd28e27fdfe0c76f7f59d123e214b6edf115ce164a101387d43abf6f",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "on"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "on_prepare_clear_X"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 43
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "813dc0f15aa732474e862c469e760889766904656571498b0d3304a18860fdc4"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "b26"
+            ],
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b2"
+            ],
+            [
+              "Z",
+              "b36"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b36",
+                  "b2"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b36"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b26"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1",
+                  "b2"
+                ],
+                "symbol": "stack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1",
+              "b2"
+            ],
+            "symbol": "on"
+          },
+          "name": "moose_reduced_blocksworld_on_rule_11"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b36",
+                "b2"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b36"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b26"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b1",
+                "b2"
+              ],
+              "symbol": "stack"
+            }
+          }
+        ],
+        "end_state_sha256": "6c73d05a4545bc1ce5e3429e8d0c89888eaed05915b76e42cb977404fbbfb8e4",
+        "start_state_sha256": "c7626d91a73e1147dcf0b79460d6e1d82ab2a3e9f09fca568d56f8a71b55806d"
+      }
+    ],
+    "roots": [
+      42,
+      42,
+      23,
+      19,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

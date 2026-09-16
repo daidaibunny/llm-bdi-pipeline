@@ -1,0 +1,1052 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.14321791601832956,
+  "case_index": 14,
+  "configuration_count": 205,
+  "correctness": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "blocksworld-clear",
+  "goal": {
+    "arguments": [
+      "b1"
+    ],
+    "symbol": "clear"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "X": "b1",
+        "Y": "b41"
+      },
+      "plan": "clear_prepare_clear_Y",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/blocksworld-clear/test/p-52-0.pddl",
+  "reason": null,
+  "request_count": 40,
+  "return_count": 68,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 3,
+  "verification_seconds": 0.001887959020677954,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b41"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b41"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "25066f1a097c6fe8aa18b8c6f2354d600cbed640633dec4431c3d2b68d3a42f1",
+        "start_state_sha256": "a0d280d605ca6e43723bafd397f013517642ae3bf7d73d73a760dd9972669cc8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b27"
+            ],
+            [
+              "Z",
+              "b41"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b27"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b41",
+                  "b1"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b27"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b41",
+                "b1"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "25066f1a097c6fe8aa18b8c6f2354d600cbed640633dec4431c3d2b68d3a42f1",
+        "start_state_sha256": "8cc00ff7722cb3098a2651f2fecfccf8aeeb476dc8b636a10ca1b222a789b108"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b41"
+            ],
+            [
+              "Y",
+              "b27"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b27"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b41"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b41"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 3
+          }
+        ],
+        "end_state_sha256": "8cc00ff7722cb3098a2651f2fecfccf8aeeb476dc8b636a10ca1b222a789b108",
+        "start_state_sha256": "a0d280d605ca6e43723bafd397f013517642ae3bf7d73d73a760dd9972669cc8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b41"
+            ],
+            [
+              "Y",
+              "b50"
+            ],
+            [
+              "Z",
+              "b27"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b50"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b27",
+                  "b41"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b41"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b50"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b27",
+                "b41"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "8cc00ff7722cb3098a2651f2fecfccf8aeeb476dc8b636a10ca1b222a789b108",
+        "start_state_sha256": "a558259f026a95e23edc51da5c7321684f82946c5fb4a32cc39e8d5db97e4330"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b27"
+            ],
+            [
+              "Y",
+              "b50"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b50"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b27"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b27"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 6
+          },
+          {
+            "proof": 5
+          }
+        ],
+        "end_state_sha256": "a558259f026a95e23edc51da5c7321684f82946c5fb4a32cc39e8d5db97e4330",
+        "start_state_sha256": "a0d280d605ca6e43723bafd397f013517642ae3bf7d73d73a760dd9972669cc8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b27"
+            ],
+            [
+              "Y",
+              "b21"
+            ],
+            [
+              "Z",
+              "b50"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b21"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b50",
+                  "b27"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b27"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b21"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b50",
+                "b27"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "a558259f026a95e23edc51da5c7321684f82946c5fb4a32cc39e8d5db97e4330",
+        "start_state_sha256": "85aaa651104505bfc6bab5eb76fd4d3abe4136868ed03bc33acbd8146c6682d9"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b50"
+            ],
+            [
+              "Y",
+              "b21"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b21"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b50"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b50"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 8
+          },
+          {
+            "proof": 7
+          }
+        ],
+        "end_state_sha256": "85aaa651104505bfc6bab5eb76fd4d3abe4136868ed03bc33acbd8146c6682d9",
+        "start_state_sha256": "a0d280d605ca6e43723bafd397f013517642ae3bf7d73d73a760dd9972669cc8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b50"
+            ],
+            [
+              "Y",
+              "b23"
+            ],
+            [
+              "Z",
+              "b21"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b23"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b21",
+                  "b50"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b50"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b23"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b21",
+                "b50"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "85aaa651104505bfc6bab5eb76fd4d3abe4136868ed03bc33acbd8146c6682d9",
+        "start_state_sha256": "ae2720b71debf5fd4e5a31663b36e17f0cb94ca572a5cb910e14de94b1b9721b"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b21"
+            ],
+            [
+              "Y",
+              "b23"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b23"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b21"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b21"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 10
+          },
+          {
+            "proof": 9
+          }
+        ],
+        "end_state_sha256": "ae2720b71debf5fd4e5a31663b36e17f0cb94ca572a5cb910e14de94b1b9721b",
+        "start_state_sha256": "a0d280d605ca6e43723bafd397f013517642ae3bf7d73d73a760dd9972669cc8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b21"
+            ],
+            [
+              "Y",
+              "b22"
+            ],
+            [
+              "Z",
+              "b23"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b22"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b23",
+                  "b21"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b21"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b22"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b23",
+                "b21"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "ae2720b71debf5fd4e5a31663b36e17f0cb94ca572a5cb910e14de94b1b9721b",
+        "start_state_sha256": "56987a4f3a302869791c1727da90eb6d4027e0141900b9ccdd11f5745bba9f49"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b23"
+            ],
+            [
+              "Y",
+              "b22"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b22"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b23"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b23"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 12
+          },
+          {
+            "proof": 11
+          }
+        ],
+        "end_state_sha256": "56987a4f3a302869791c1727da90eb6d4027e0141900b9ccdd11f5745bba9f49",
+        "start_state_sha256": "a0d280d605ca6e43723bafd397f013517642ae3bf7d73d73a760dd9972669cc8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b23"
+            ],
+            [
+              "Y",
+              "b5"
+            ],
+            [
+              "Z",
+              "b22"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b5"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b22",
+                  "b23"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b23"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b5"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b22",
+                "b23"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "56987a4f3a302869791c1727da90eb6d4027e0141900b9ccdd11f5745bba9f49",
+        "start_state_sha256": "7e0208b7364a31d4c1beb6522b1ed99800c6ec88c7d4e6e7ca46bebbb28629d7"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b22"
+            ],
+            [
+              "Y",
+              "b5"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b5"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b22"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b22"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 14
+          },
+          {
+            "proof": 13
+          }
+        ],
+        "end_state_sha256": "7e0208b7364a31d4c1beb6522b1ed99800c6ec88c7d4e6e7ca46bebbb28629d7",
+        "start_state_sha256": "a0d280d605ca6e43723bafd397f013517642ae3bf7d73d73a760dd9972669cc8"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b22"
+            ],
+            [
+              "Y",
+              "b10"
+            ],
+            [
+              "Z",
+              "b5"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b10"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b5",
+                  "b22"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b22"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b10"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b5",
+                "b22"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "7e0208b7364a31d4c1beb6522b1ed99800c6ec88c7d4e6e7ca46bebbb28629d7",
+        "start_state_sha256": "f7c9670f36efc714e1802d8b1cdefe166c56503f611d85058332750ddaff42ac"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "b26"
+            ],
+            [
+              "B",
+              "b10"
+            ],
+            [
+              "X",
+              "b5"
+            ],
+            [
+              "Y",
+              "b51"
+            ],
+            [
+              "Z",
+              "b47"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b51",
+                  "b47"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b51"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b47",
+                  "b26"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b47"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b26",
+                  "b10"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b26"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b10",
+                  "b5"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b5"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_7"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b51",
+                "b47"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b51"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b47",
+                "b26"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b47"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b26",
+                "b10"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b26"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b10",
+                "b5"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "f7c9670f36efc714e1802d8b1cdefe166c56503f611d85058332750ddaff42ac",
+        "start_state_sha256": "a0d280d605ca6e43723bafd397f013517642ae3bf7d73d73a760dd9972669cc8"
+      }
+    ],
+    "roots": [
+      0,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

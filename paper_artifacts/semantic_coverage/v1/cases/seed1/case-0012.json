@@ -1,0 +1,344 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.05513287498615682,
+  "case_index": 12,
+  "configuration_count": 79,
+  "correctness": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "blocksworld-clear",
+  "goal": {
+    "arguments": [
+      "b1"
+    ],
+    "symbol": "clear"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "X": "b1",
+        "Y": "b11"
+      },
+      "plan": "clear_prepare_clear_Y",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/blocksworld-clear/test/p-50-0.pddl",
+  "reason": null,
+  "request_count": 16,
+  "return_count": 18,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 1,
+  "verification_seconds": 0.0005424999981187284,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b11"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b11"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b1"
+                ],
+                "symbol": "clear"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_prepare_clear_Y"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "d923d560555e13b9af9af6454615112b920b1808ef513f83a145f0df9a043263",
+        "start_state_sha256": "c2bdae85e85a4f1b85ba1885332c3071db75b5e875ffa68a2d81a76e43901508"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b29"
+            ],
+            [
+              "Z",
+              "b11"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b29"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b11",
+                  "b1"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_2"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b29"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b11",
+                "b1"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "d923d560555e13b9af9af6454615112b920b1808ef513f83a145f0df9a043263",
+        "start_state_sha256": "967f19778a54369388aa6dee1e770b7fa784802647069f240699ab1f5c995f0b"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "b32"
+            ],
+            [
+              "B",
+              "b29"
+            ],
+            [
+              "X",
+              "b11"
+            ],
+            [
+              "Y",
+              "b9"
+            ],
+            [
+              "Z",
+              "b5"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b9",
+                  "b5"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b9"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b5",
+                  "b32"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b5"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b32",
+                  "b29"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b32"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b29",
+                  "b11"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b11"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_7"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b9",
+                "b5"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b9"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b5",
+                "b32"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b5"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b32",
+                "b29"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b32"
+              ],
+              "symbol": "putdown"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b29",
+                "b11"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "967f19778a54369388aa6dee1e770b7fa784802647069f240699ab1f5c995f0b",
+        "start_state_sha256": "c2bdae85e85a4f1b85ba1885332c3071db75b5e875ffa68a2d81a76e43901508"
+      }
+    ],
+    "roots": [
+      0,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

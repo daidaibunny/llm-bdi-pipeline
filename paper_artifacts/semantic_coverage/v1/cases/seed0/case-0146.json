@@ -1,0 +1,457 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.0019223750568926334,
+  "case_index": 146,
+  "configuration_count": 47,
+  "correctness": {
+    "fail": 0,
+    "pass": 2,
+    "total": 2,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "numeric-miconic",
+  "goal": {
+    "arguments": [
+      "p1"
+    ],
+    "symbol": "served"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "f3",
+        "N": "4",
+        "X": "p1",
+        "Y": "f1",
+        "Z": "f2"
+      },
+      "plan": "moose_reduced_numeric_miconic_rule_7",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "p1"
+      },
+      "plan": "served_prepare_boarded_X",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/numeric-miconic/test/p0_01.pddl",
+  "reason": null,
+  "request_count": 10,
+  "return_count": 11,
+  "root_enumeration_complete": true,
+  "saturated": false,
+  "seed": 0,
+  "verification_seconds": 0.0002139579737558961,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "p1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p1"
+                ],
+                "symbol": "boarded"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p1"
+                ],
+                "symbol": "served"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1"
+            ],
+            "symbol": "served"
+          },
+          "name": "served_prepare_boarded_X"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "927327765a1d62ac2e3512484da7777d79026df18592a70f3860ce0a3d301d6c",
+        "start_state_sha256": "ab587aa679d1644713e05e4815f30272aa89fb5412c2e6819f0788b9fe49565a"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "N",
+              "3"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "f2"
+            ],
+            [
+              "Z",
+              "f3"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "f2",
+                  "f3"
+                ],
+                "symbol": "up_fast"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f3",
+                  "p1"
+                ],
+                "symbol": "depart"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1"
+            ],
+            "symbol": "served"
+          },
+          "name": "moose_reduced_numeric_miconic_rule_3"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "f2",
+                "f3"
+              ],
+              "symbol": "up_fast"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f3",
+                "p1"
+              ],
+              "symbol": "depart"
+            }
+          }
+        ],
+        "end_state_sha256": "927327765a1d62ac2e3512484da7777d79026df18592a70f3860ce0a3d301d6c",
+        "start_state_sha256": "b96ee0e8704d6c3b4c26c7855093109fe374710814912cd88c5adb44c48c9098"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "f2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "f2"
+                ],
+                "symbol": "lift-at"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p1"
+                ],
+                "symbol": "boarded"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1"
+            ],
+            "symbol": "boarded"
+          },
+          "name": "boarded_prepare_lift-at_Y"
+        },
+        "children": [
+          {
+            "proof": 4
+          },
+          {
+            "proof": 3
+          }
+        ],
+        "end_state_sha256": "b96ee0e8704d6c3b4c26c7855093109fe374710814912cd88c5adb44c48c9098",
+        "start_state_sha256": "ab587aa679d1644713e05e4815f30272aa89fb5412c2e6819f0788b9fe49565a"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "N",
+              "4"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "f2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "f2",
+                  "p1"
+                ],
+                "symbol": "board"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1"
+            ],
+            "symbol": "boarded"
+          },
+          "name": "boarded_via_board"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "f2",
+                "p1"
+              ],
+              "symbol": "board"
+            }
+          }
+        ],
+        "end_state_sha256": "b96ee0e8704d6c3b4c26c7855093109fe374710814912cd88c5adb44c48c9098",
+        "start_state_sha256": "67e3dce3bd8989b6a3032ea148a157b74a34a917953e05125f575dd10e7da9ee"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "N",
+              "4"
+            ],
+            [
+              "X",
+              "f2"
+            ],
+            [
+              "Y",
+              "f1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "f1",
+                  "f2"
+                ],
+                "symbol": "up_fast"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "f2"
+            ],
+            "symbol": "lift-at"
+          },
+          "name": "lift-at_via_up_fast"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "f1",
+                "f2"
+              ],
+              "symbol": "up_fast"
+            }
+          }
+        ],
+        "end_state_sha256": "67e3dce3bd8989b6a3032ea148a157b74a34a917953e05125f575dd10e7da9ee",
+        "start_state_sha256": "ab587aa679d1644713e05e4815f30272aa89fb5412c2e6819f0788b9fe49565a"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "f3"
+            ],
+            [
+              "N",
+              "4"
+            ],
+            [
+              "X",
+              "p1"
+            ],
+            [
+              "Y",
+              "f1"
+            ],
+            [
+              "Z",
+              "f2"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "f1",
+                  "f2"
+                ],
+                "symbol": "up_fast"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f2",
+                  "p1"
+                ],
+                "symbol": "board"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f2",
+                  "f3"
+                ],
+                "symbol": "up_fast"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "f3",
+                  "p1"
+                ],
+                "symbol": "depart"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p1"
+            ],
+            "symbol": "served"
+          },
+          "name": "moose_reduced_numeric_miconic_rule_7"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "f1",
+                "f2"
+              ],
+              "symbol": "up_fast"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f2",
+                "p1"
+              ],
+              "symbol": "board"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f2",
+                "f3"
+              ],
+              "symbol": "up_fast"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "f3",
+                "p1"
+              ],
+              "symbol": "depart"
+            }
+          }
+        ],
+        "end_state_sha256": "927327765a1d62ac2e3512484da7777d79026df18592a70f3860ce0a3d301d6c",
+        "start_state_sha256": "ab587aa679d1644713e05e4815f30272aa89fb5412c2e6819f0788b9fe49565a"
+      }
+    ],
+    "roots": [
+      5,
+      5,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

@@ -41,13 +41,28 @@ certificate.
 
 ## Active Work
 
-Post-hoc semantic audit (2026-09-15): the independent call-return evaluator and
-proof replay checker are implemented. Tests cover recursion, cyclic failure,
-overlap, state-dependent subgoal returns, bindings, numeric values, and unknown
-denominators. Frozen scope: 186 atomic goal-state pairs across five unchanged
-Full GP2PL libraries, 930 requests. Next: run the frozen audit and update the
-latest supervisor manuscript; no execution-success count proves universal
-plan-template correctness.
+Metrics work (2026-09-15): no manuscript edits are authorized; all uncommitted
+paper changes from this work were withdrawn. The uploaded supervisor definitions,
+not a replacement execution-success statistic, govern the requested final metrics.
+
+Completed diagnostic work: independent call-return analysis and proof replay;
+930 initial-state atomic requests yield 770 PASS, 10 FAIL, and 150 UNKNOWN. These
+are diagnostic outcomes, not the requested final structural extended coverage.
+Exact Boolean model counting and explicit literal-sum/overlap-partition structural
+evaluation are implemented. The latter reproduces Waters (2014), Figure 1:
+19/32. Relevant checks: 31 tests passed, Ruff passed.
+
+Definition audit covers all 80 frozen library files and computes 6,428 exact
+context counts for observed Boolean bindings. It finds 30 template/instance
+groups with binding-dependent basic coverage, including 1/256 versus 1/128 for
+the same Tower plan and object set. All 80 libraries contain direct recursion.
+The uploaded equations do not fix recursion, overlap, binding aggregation, or a
+numeric-state measure. No final extended-coverage percentage is reported until
+these are specified. Logistics counterexamples refute 24 template-seed pairs;
+10 Numeric Minecraft pairs violate the analogous numeric completion contract.
+The finite audit cannot certify the remaining templates over all world states.
+Next: resolve the metric conventions without editing the manuscript, then run
+the agreed full evaluation; do not present the diagnostic sample as completion.
 
 | Item | Status | Next step |
 | --- | --- | --- |

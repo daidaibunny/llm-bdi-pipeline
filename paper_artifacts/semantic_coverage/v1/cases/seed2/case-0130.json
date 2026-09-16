@@ -1,0 +1,47 @@
+{
+  "all_obligations_resolved": false,
+  "analysis_seconds": 0.4192227500025183,
+  "case_index": 130,
+  "configuration_count": 0,
+  "correctness": {
+    "fail": 0,
+    "pass": 0,
+    "total": 0,
+    "unknown": 0
+  },
+  "correctness_bounds": null,
+  "coverage": {
+    "fail": 0,
+    "pass": 0,
+    "total": 1,
+    "unknown": 1
+  },
+  "coverage_bounds": {
+    "lower": 0.0,
+    "upper": 1.0
+  },
+  "domain": "logistics",
+  "goal": {
+    "arguments": [
+      "p0",
+      "l0-1"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [],
+  "problem": "src/domains/logistics/test/p0_03.pddl",
+  "reason": "binding_join_limit",
+  "request_count": 0,
+  "return_count": 0,
+  "root_enumeration_complete": false,
+  "saturated": false,
+  "seed": 2,
+  "verification_seconds": 4.499976057559252e-06,
+  "witnesses": {
+    "nodes": [],
+    "roots": [
+      null
+    ]
+  },
+  "witnesses_replayed": true
+}

@@ -1,0 +1,178 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.005065583041869104,
+  "case_index": 13,
+  "configuration_count": 5,
+  "correctness": {
+    "fail": 0,
+    "pass": 2,
+    "total": 2,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "blocksworld-clear",
+  "goal": {
+    "arguments": [
+      "b1"
+    ],
+    "symbol": "clear"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "X": "b1",
+        "Y": "b13"
+      },
+      "plan": "clear_via_unstack_then_putdown",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "b1",
+        "Y": "b13"
+      },
+      "plan": "moose_reduced_blocksworld_clear_rule_1",
+      "status": "pass"
+    }
+  ],
+  "problem": "src/domains/blocksworld-clear/test/p-51-0.pddl",
+  "reason": null,
+  "request_count": 1,
+  "return_count": 2,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 4,
+  "verification_seconds": 0.00027595798019319773,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b13"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b13",
+                  "b1"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "moose_reduced_blocksworld_clear_rule_1"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b13",
+                "b1"
+              ],
+              "symbol": "unstack"
+            }
+          }
+        ],
+        "end_state_sha256": "3f0186c73b70129c7f67a7ad95b679f6af2c1fab8485abcac4c7f4b64f6903a2",
+        "start_state_sha256": "43afa481795f99c3ec61719b25347c11257925e24dd22d780960f2d851bb3be3"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "b1"
+            ],
+            [
+              "Y",
+              "b13"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "b13",
+                  "b1"
+                ],
+                "symbol": "unstack"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "b13"
+                ],
+                "symbol": "putdown"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "b1"
+            ],
+            "symbol": "clear"
+          },
+          "name": "clear_via_unstack_then_putdown"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "b13",
+                "b1"
+              ],
+              "symbol": "unstack"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "b13"
+              ],
+              "symbol": "putdown"
+            }
+          }
+        ],
+        "end_state_sha256": "5cf9c967f730822554844d4970503d584695f3993e9d82ce857fd5274863a148",
+        "start_state_sha256": "43afa481795f99c3ec61719b25347c11257925e24dd22d780960f2d851bb3be3"
+      }
+    ],
+    "roots": [
+      0,
+      1,
+      0
+    ]
+  },
+  "witnesses_replayed": true
+}

@@ -1,0 +1,47 @@
+{
+  "all_obligations_resolved": false,
+  "analysis_seconds": 5.000201624992769,
+  "case_index": 71,
+  "configuration_count": 0,
+  "correctness": {
+    "fail": 0,
+    "pass": 0,
+    "total": 0,
+    "unknown": 0
+  },
+  "correctness_bounds": null,
+  "coverage": {
+    "fail": 0,
+    "pass": 0,
+    "total": 1,
+    "unknown": 1
+  },
+  "coverage_bounds": {
+    "lower": 0.0,
+    "upper": 1.0
+  },
+  "domain": "depots",
+  "goal": {
+    "arguments": [
+      "crate2",
+      "pallet3"
+    ],
+    "symbol": "on"
+  },
+  "obligations": [],
+  "problem": "src/domains/depots/test/p14.pddl",
+  "reason": "binding_time_limit",
+  "request_count": 0,
+  "return_count": 0,
+  "root_enumeration_complete": false,
+  "saturated": false,
+  "seed": 4,
+  "verification_seconds": 4.958012141287327e-06,
+  "witnesses": {
+    "nodes": [],
+    "roots": [
+      null
+    ]
+  },
+  "witnesses_replayed": true
+}

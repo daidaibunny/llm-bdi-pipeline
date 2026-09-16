@@ -1,0 +1,528 @@
+{
+  "all_obligations_resolved": true,
+  "analysis_seconds": 0.20724358299048617,
+  "case_index": 123,
+  "configuration_count": 20,
+  "correctness": {
+    "fail": 2,
+    "pass": 3,
+    "total": 5,
+    "unknown": 0
+  },
+  "correctness_bounds": {
+    "lower": 0.6,
+    "upper": 0.6
+  },
+  "coverage": {
+    "fail": 0,
+    "pass": 1,
+    "total": 1,
+    "unknown": 0
+  },
+  "coverage_bounds": {
+    "lower": 1.0,
+    "upper": 1.0
+  },
+  "domain": "logistics",
+  "goal": {
+    "arguments": [
+      "p3",
+      "l0-0"
+    ],
+    "symbol": "at"
+  },
+  "obligations": [
+    {
+      "binding": {
+        "A": "l0-1",
+        "B": "c0",
+        "X": "p3",
+        "Y": "l0-0",
+        "Z": "t0"
+      },
+      "plan": "at_via_load-truck_then_drive-truck_then_unload-truck",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l0-1",
+        "B": "t0",
+        "X": "p3",
+        "Y": "l0-0",
+        "Z": "c0"
+      },
+      "plan": "moose_reduced_logistics_rule_6",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "A": "l0-0",
+        "B": "a0",
+        "X": "p3",
+        "Y": "l0-0",
+        "Z": "a0"
+      },
+      "plan": "at_prepare_in_X_B_2",
+      "status": "fail"
+    },
+    {
+      "binding": {
+        "A": "l0-1",
+        "B": "c0",
+        "C": "t0",
+        "X": "p3",
+        "Y": "l0-0",
+        "Z": "t0"
+      },
+      "plan": "at_prepare_in_X_C",
+      "status": "pass"
+    },
+    {
+      "binding": {
+        "X": "p3",
+        "Y": "l0-0",
+        "Z": "a0"
+      },
+      "plan": "at_prepare_in_X_Z_2",
+      "status": "fail"
+    }
+  ],
+  "problem": "src/domains/logistics/test/p0_01.pddl",
+  "reason": null,
+  "request_count": 5,
+  "return_count": 3,
+  "root_enumeration_complete": true,
+  "saturated": true,
+  "seed": 4,
+  "verification_seconds": 0.00024100003065541387,
+  "witnesses": {
+    "nodes": [
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l0-1"
+            ],
+            [
+              "B",
+              "c0"
+            ],
+            [
+              "C",
+              "t0"
+            ],
+            [
+              "X",
+              "p3"
+            ],
+            [
+              "Y",
+              "l0-0"
+            ],
+            [
+              "Z",
+              "t0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p3",
+                  "t0"
+                ],
+                "symbol": "in"
+              },
+              "kind": "subgoal"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p3",
+                  "l0-0"
+                ],
+                "symbol": "at"
+              },
+              "kind": "subgoal"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p3",
+              "l0-0"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_prepare_in_X_C"
+        },
+        "children": [
+          {
+            "proof": 2
+          },
+          {
+            "proof": 1
+          }
+        ],
+        "end_state_sha256": "bcbfe3d5b9a3af3027cbc6ddd37f2a3bcea7845c7e70db846e58634be3e03dac",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l0-1"
+            ],
+            [
+              "B",
+              "t0"
+            ],
+            [
+              "X",
+              "p3"
+            ],
+            [
+              "Y",
+              "l0-0"
+            ],
+            [
+              "Z",
+              "c0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "t0",
+                  "l0-1",
+                  "l0-0",
+                  "c0"
+                ],
+                "symbol": "drive-truck"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p3",
+                  "t0",
+                  "l0-0"
+                ],
+                "symbol": "unload-truck"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p3",
+              "l0-0"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_logistics_rule_4"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "t0",
+                "l0-1",
+                "l0-0",
+                "c0"
+              ],
+              "symbol": "drive-truck"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "p3",
+                "t0",
+                "l0-0"
+              ],
+              "symbol": "unload-truck"
+            }
+          }
+        ],
+        "end_state_sha256": "bcbfe3d5b9a3af3027cbc6ddd37f2a3bcea7845c7e70db846e58634be3e03dac",
+        "start_state_sha256": "b84c71442d0b817e72d2f497b67638f7f494c0cd85e8eb363e8867849c7c69e0"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "X",
+              "p3"
+            ],
+            [
+              "Y",
+              "t0"
+            ],
+            [
+              "Z",
+              "l0-1"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p3",
+                  "t0",
+                  "l0-1"
+                ],
+                "symbol": "load-truck"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p3",
+              "t0"
+            ],
+            "symbol": "in"
+          },
+          "name": "in_via_load-truck"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "p3",
+                "t0",
+                "l0-1"
+              ],
+              "symbol": "load-truck"
+            }
+          }
+        ],
+        "end_state_sha256": "b84c71442d0b817e72d2f497b67638f7f494c0cd85e8eb363e8867849c7c69e0",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l0-1"
+            ],
+            [
+              "B",
+              "t0"
+            ],
+            [
+              "X",
+              "p3"
+            ],
+            [
+              "Y",
+              "l0-0"
+            ],
+            [
+              "Z",
+              "c0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p3",
+                  "t0",
+                  "l0-1"
+                ],
+                "symbol": "load-truck"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "t0",
+                  "l0-1",
+                  "l0-0",
+                  "c0"
+                ],
+                "symbol": "drive-truck"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p3",
+                  "t0",
+                  "l0-0"
+                ],
+                "symbol": "unload-truck"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p3",
+              "l0-0"
+            ],
+            "symbol": "at"
+          },
+          "name": "moose_reduced_logistics_rule_6"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "p3",
+                "t0",
+                "l0-1"
+              ],
+              "symbol": "load-truck"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "t0",
+                "l0-1",
+                "l0-0",
+                "c0"
+              ],
+              "symbol": "drive-truck"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "p3",
+                "t0",
+                "l0-0"
+              ],
+              "symbol": "unload-truck"
+            }
+          }
+        ],
+        "end_state_sha256": "bcbfe3d5b9a3af3027cbc6ddd37f2a3bcea7845c7e70db846e58634be3e03dac",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      },
+      {
+        "branch": {
+          "binding": [
+            [
+              "A",
+              "l0-1"
+            ],
+            [
+              "B",
+              "c0"
+            ],
+            [
+              "X",
+              "p3"
+            ],
+            [
+              "Y",
+              "l0-0"
+            ],
+            [
+              "Z",
+              "t0"
+            ]
+          ],
+          "body": [
+            {
+              "call": {
+                "arguments": [
+                  "p3",
+                  "t0",
+                  "l0-1"
+                ],
+                "symbol": "load-truck"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "t0",
+                  "l0-1",
+                  "l0-0",
+                  "c0"
+                ],
+                "symbol": "drive-truck"
+              },
+              "kind": "action"
+            },
+            {
+              "call": {
+                "arguments": [
+                  "p3",
+                  "t0",
+                  "l0-0"
+                ],
+                "symbol": "unload-truck"
+              },
+              "kind": "action"
+            }
+          ],
+          "goal": {
+            "arguments": [
+              "p3",
+              "l0-0"
+            ],
+            "symbol": "at"
+          },
+          "name": "at_via_load-truck_then_drive-truck_then_unload-truck"
+        },
+        "children": [
+          {
+            "action": {
+              "arguments": [
+                "p3",
+                "t0",
+                "l0-1"
+              ],
+              "symbol": "load-truck"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "t0",
+                "l0-1",
+                "l0-0",
+                "c0"
+              ],
+              "symbol": "drive-truck"
+            }
+          },
+          {
+            "action": {
+              "arguments": [
+                "p3",
+                "t0",
+                "l0-0"
+              ],
+              "symbol": "unload-truck"
+            }
+          }
+        ],
+        "end_state_sha256": "bcbfe3d5b9a3af3027cbc6ddd37f2a3bcea7845c7e70db846e58634be3e03dac",
+        "start_state_sha256": "2f666004637d6dd71dd8c7f03254dd48d29bef8b75701a73f6fe7024c4efcb93"
+      }
+    ],
+    "roots": [
+      4,
+      4,
+      3,
+      null,
+      0,
+      null
+    ]
+  },
+  "witnesses_replayed": true
+}
